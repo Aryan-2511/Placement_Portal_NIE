@@ -80,7 +80,9 @@ a {
   color: inherit;
   text-decoration: none;
 }
-
+p{
+  color: var(--color-grey-600)
+}
 ul {
   list-style: none;
 }

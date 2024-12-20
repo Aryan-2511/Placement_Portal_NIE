@@ -7,7 +7,7 @@ function MainLayout() {
     <div className="grid grid-cols-[27.4rem_1fr] grid-rows-[auto_1fr] h-screen">
       <Sidebar />
       <Navbar />
-      <main className="bg-slate-200 pt-[5rem] px-[7.2rem] font-['Poppins']">
+      <main className="bg-[var(--color-grey-50)] pt-[5rem] px-[7.2rem] font-['Poppins']">
         <Outlet />
       </main>
     </div>
