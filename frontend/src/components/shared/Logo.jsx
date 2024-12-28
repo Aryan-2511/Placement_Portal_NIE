@@ -9,7 +9,7 @@ function Logo() {
         />
       </div>
       <p className="text-[1.6rem] mt-2 font-bold text-[var(--color-grey-600)]">
-        The National Institute of Engineering, Mysuru{' '}
+        The National Institute of Engineering, 570008, Mysuru{' '}
       </p>
     </div>
   );

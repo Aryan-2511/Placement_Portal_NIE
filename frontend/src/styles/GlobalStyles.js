@@ -11,6 +11,7 @@ const GlobalStyles = createGlobalStyle`
 
     --color-blue-0 : #E5E5FF;
     --color-blue-100 : #B3DFF8;
+    --color-blue-600 : #353587;
     --color-blue-700 : #242466;
 
     --color-brown-100: #F8D1B3;
@@ -66,7 +67,7 @@ body {
   /* color: var(--color-grey-700); */
 
   transition: color 0.3s, background-color 0.3s;
-  min-height: 100vh;
+  height: 100vh;
   line-height: 1.5;
   font-size: 1.6rem;
   background-color: var(--color-grey-50);
@@ -86,7 +87,9 @@ p{
 ul {
   list-style: none;
 }
-
+img{
+  max-width:100%;
+}
 p,
 h1,
 h2,

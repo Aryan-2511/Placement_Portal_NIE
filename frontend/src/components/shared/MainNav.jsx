@@ -12,7 +12,7 @@ import {
 function MainNav() {
   return (
     <nav>
-      <ul className="">
+      <ul>
         <li className="w-full h-[6.4rem]">
           <NavLink
             to="dashboard"

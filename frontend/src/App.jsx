@@ -1,8 +1,8 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 // Layouts
 import MainLayout from './components/layout/MainLayout'; // Unified layout for both student and coordinator
-
 import GlobalStyles from './styles/GlobalStyles';
 
 // Student Pages
@@ -19,12 +19,12 @@ import ManageOpportunities from './pages/coordinator/ManageOpportunities';
 import Reports from './pages/coordinator/Reports';
 
 // Shared Pages
-import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import ErrorPage from './pages/ErrorPage';
 
 // Utilities
 import PrivateRoute from './routes/PrivateRoute';
+import LandingPage from './pages/LandingPage';
 
 const router = createBrowserRouter([
   {
@@ -33,7 +33,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Login />,
+        element: <LandingPage />,
       },
       {
         element: <PrivateRoute />, // PrivateRoute applied at top level
@@ -81,7 +81,34 @@ const App = () => {
   return (
     <>
       <GlobalStyles />
-      <RouterProvider router={router} />;
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        containerClassName=""
+        containerStyle={{ margin: '8px' }}
+        toastOptions={{
+          // Define default options
+          className: '',
+          duration: 5000,
+          style: {
+            fontSize: '16px',
+            maxWidth: '500px',
+            padding: '16px 24px',
+            backgroundColor: 'var(--color-grey-0)',
+            color: 'var(--color-grey-700)',
+          },
+
+          // Default options for specific types
+          success: {
+            duration: 3000,
+          },
+          error: {
+            duration: 5000,
+          },
+        }}
+      />
+      <RouterProvider router={router} />
     </>
   );
 };
