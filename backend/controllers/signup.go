@@ -63,7 +63,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		INSERT INTO students (
 			name, usn, dob, college_email, personal_email,branch, batch, address, contact, gender, category, aadhar, pan,
 			class_10_percentage, class_10_year, class_10_board, class_12_percentage, class_12_year,
-			class_12_board, current_cgpa, backlogs,password_hash, role, is_verified, verification_token
+			class_12_board, current_cgpa, backlogs,password_hash, role, is_verified, verification_token, 
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
 	`
 	_, err = db.Exec(query, user.Name, user.USN, user.DOB, user.College_Email, user.Personal_Email, user.Branch, user.Batch, user.Address, user.Contact, user.Gender, user.Category,
@@ -98,7 +98,7 @@ func CreateStudentsTable(db *sql.DB) {
 			college_email VARCHAR(100) UNIQUE NOT NULL,
 			personal_email VARCHAR(100) UNIQUE NOT NULL,
 			branch VARCHAR(50),
-			batch INT,
+			batch VARCHAR(10),
 			address TEXT,
 			contact VARCHAR(15),
 			gender VARCHAR(10),
@@ -118,7 +118,8 @@ func CreateStudentsTable(db *sql.DB) {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			is_verified BOOLEAN DEFAULT FALSE,
 			verification_token TEXT,
-			reset_token TEXT
+			reset_token TEXT,
+			isPlaced VARCHAR(15) DEFAULT 'NO'
 		);
 	`
 

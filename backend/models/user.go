@@ -7,7 +7,7 @@ type User struct {
 	College_Email       string  `json:"college_email"`
 	Personal_Email      string  `json:"personal_email"`
 	Branch              string  `json:"branch"`
-	Batch               int     `json:"batch"`
+	Batch               string     `json:"batch"`
 	Address             string  `json:"address"`
 	Contact             string  `json:"contact"`
 	Gender              string  `json:"gender"`

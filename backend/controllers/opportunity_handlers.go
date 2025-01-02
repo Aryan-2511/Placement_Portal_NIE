@@ -29,8 +29,8 @@ func GenerateOpportunityID(batch string, serial int) string {
 
 
 func AddOpportunity(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Request Method: %s", r.Method)
-	log.Printf("Request Headers: %+v", r.Header)
+	// log.Printf("Request Method: %s", r.Method)
+	// log.Printf("Request Headers: %+v", r.Header)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return

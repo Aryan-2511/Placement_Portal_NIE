@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"log"
+	"database/sql"
 	"time"
 	"strings"
 	"Github.com/Aryan-2511/Placement_NIE/db"
@@ -20,24 +21,37 @@ func CheckEligibility(student models.User, opportunity models.Opportunity) []Eli
 	var criteria []EligibilityCriterion
 
 
-	var isPlaced bool
-	query := `SELECT COUNT(*) FROM placed_students WHERE usn = $1`
-	err := db.DB.QueryRow(query, student.USN).Scan(&isPlaced)
-	if err != nil {
+	const lowPackageLimit = 300000 
+
+	var packageAmount int
+	query := `SELECT package FROM placed_students WHERE usn = $1`
+	err := db.DB.QueryRow(query, student.USN).Scan(&packageAmount)
+
+	// Placement status check
+	if err == sql.ErrNoRows {
+		// Not placed, eligible
+		criteria = append(criteria, EligibilityCriterion{
+			Criterion: "Placement Status",
+			Passed:    true,
+		})
+	} else if err != nil {
+		// Error querying the database
 		fmt.Printf("Error checking placement status: %v", err)
 		criteria = append(criteria, EligibilityCriterion{
 			Criterion: "Placement Status",
 			Passed:    false,
 		})
-	} else if isPlaced {
-		criteria = append(criteria, EligibilityCriterion{
-			Criterion: "Placement Status",
-			Passed:    false,
-		})
-	} else {
+	} else if packageAmount < lowPackageLimit {
+		// Placed with a package below the limit, eligible
 		criteria = append(criteria, EligibilityCriterion{
 			Criterion: "Placement Status",
 			Passed:    true,
+		})
+	} else {
+		// Placed with a package above the limit, not eligible
+		criteria = append(criteria, EligibilityCriterion{
+			Criterion: "Placement Status",
+			Passed:    false,
 		})
 	}
 	//CGPA 
@@ -87,7 +101,7 @@ func CheckEligibility(student models.User, opportunity models.Opportunity) []Eli
 	//batch
 	log.Print(student.Batch)
 	log.Print(opportunity.Batch)
-	if fmt.Sprintf("%d", student.Batch) == strings.TrimSpace(opportunity.Batch) {
+	if strings.TrimSpace(student.Batch) == strings.TrimSpace(opportunity.Batch) {
 		criteria = append(criteria, EligibilityCriterion{Criterion: "Batch Criteria", Passed: true})
 	} else {
 		criteria = append(criteria, EligibilityCriterion{

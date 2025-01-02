@@ -26,8 +26,10 @@ func main() {
 
 	http.HandleFunc("/signup", controllers.SignupHandler)
 	http.HandleFunc("/login", controllers.LoginHandler)
-	http.HandleFunc("/add-placed-student",controllers.MarkStudentAsPlaced)
-	http.HandleFunc("/get-placed-student",controllers.GetPlacedStudents)
+	http.HandleFunc("/placed-student/add",controllers.AddPlacedStudent)
+	http.HandleFunc("/placed-student/edit",controllers.EditPlacedStudent)
+	http.HandleFunc("/placed-student/delete",controllers.DeletePlacedStudent)
+	http.HandleFunc("/get-placed-students",controllers.GetPlacedStudents)
 	http.HandleFunc("/opportunities/add", controllers.AddOpportunity)
 	http.HandleFunc("/opportunities/edit", controllers.EditOpportunity)
 	http.HandleFunc("/opportunities/delete", controllers.DeleteOpportunity)
@@ -42,6 +44,7 @@ func main() {
 	http.HandleFunc("/forgot-password", controllers.ForgotPasswordHandler)  // Route for requesting a password reset link
 	http.HandleFunc("/reset-password", controllers.ResetPasswordHandler)   // Route for resetting the password
 	http.HandleFunc("/verify-email", controllers.VerifyEmailHandler) // Route for verifying email
+	http.HandleFunc("/export-student-details", controllers.ExportCustomStudentDetailsToCSV) // Route for verifying email
 
 
 	http.Handle("/protected", controllers.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
