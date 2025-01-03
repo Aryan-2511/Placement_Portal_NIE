@@ -152,7 +152,7 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request){
 
 	userRole := r.Header.Get("Role")
 	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can delete opportunities", http.StatusUnauthorized)
+		http.Error(w, "Unauthorized: Only admins or placement coordinators can delete placed students", http.StatusUnauthorized)
 		return
 	}
 	usn := r.URL.Query().Get("usn")
