@@ -5,9 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"Github.com/Aryan-2511/Placement_NIE/db"
 )
-func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+func VerifyEmailHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	defer func() {
         if r := recover(); r != nil {
             log.Printf("Recovered from panic: %v", r)
@@ -22,7 +21,6 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
     log.Printf("Received token: %s", token)
-	db := db.InitDB()
 
     if db == nil {
         log.Fatal("Database connection is not initialized")

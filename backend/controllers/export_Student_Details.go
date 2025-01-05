@@ -7,11 +7,11 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"database/sql"
 
-	"Github.com/Aryan-2511/Placement_NIE/db"
 )
 
-func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request) {
+func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	userRole := r.Header.Get("Role")
 	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
@@ -83,7 +83,7 @@ func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request) {
 	`, strings.Join(selectedColumns, ", "))
 	log.Print(query)
 	// Execute the query
-	rows, err := db.DB.Query(query, request.OpportunityID)
+	rows, err := db.Query(query, request.OpportunityID)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

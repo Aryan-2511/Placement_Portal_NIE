@@ -4,10 +4,9 @@ import(
 	"encoding/json"
 	"log"
 	"net/http"
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	var request struct {
 		Email string `json:"email"`
 	}
@@ -24,7 +23,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		RETURNING name
 	`
 	var name string
-	err := db.DB.QueryRow(query, resetToken, request.Email).Scan(&name)
+	err := db.QueryRow(query, resetToken, request.Email).Scan(&name)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Email not found", http.StatusNotFound)
 		return

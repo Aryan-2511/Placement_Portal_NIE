@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 	"golang.org/x/crypto/bcrypt"
@@ -25,7 +24,7 @@ func GenerateAdminID(role string, serial int) string {
 	return fmt.Sprintf("AD%s%s", roleCode[role], serialStr)
 }
 
-func AddAdmin(w http.ResponseWriter,r *http.Request){
+func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPost{
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -48,7 +47,6 @@ func AddAdmin(w http.ResponseWriter,r *http.Request){
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	db := db.InitDB()
 	tableName := "admins"
 	if utils.CheckTableExists(db, tableName) {
 		fmt.Printf("Table '%s' exists.\n", tableName)
@@ -99,7 +97,7 @@ func CreateAdminsTable(db *sql.DB) {
 		log.Println("Admins table ensured to exist.")
 	}
 }
-func EditAdmin(w http.ResponseWriter, r *http.Request){
+func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -122,8 +120,6 @@ func EditAdmin(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	
-	db := db.InitDB()
-
 	query := `
 			UPDATE admins
 			SET name = $1 , contact = $2

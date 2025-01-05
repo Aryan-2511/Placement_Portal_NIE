@@ -7,13 +7,12 @@ import (
 	"log"
 	"net/http"
 
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request){
+func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -36,7 +35,6 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	db := db.InitDB()
 	tableName := "admins"
 	if utils.CheckTableExists(db, tableName) {
 		fmt.Printf("Table '%s' exists.\n", tableName)
@@ -123,14 +121,13 @@ func CreatePlacementCoordinatorsTable(db *sql.DB) {
 	}
 }
 
-func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request){
+func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	db := db.InitDB()
 	if db == nil {
 		log.Println("Failed to initialize the database")
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -172,7 +169,7 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(coordinators)
 }
 
-func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request){
+func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -189,7 +186,6 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	db := db.InitDB()
 	if db == nil {
 		log.Println("Failed to initialize the database")
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -243,7 +239,7 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request){
 	w.Write([]byte("Placement coordinator deleted successfully"))
 }
 // EditPlacementCoordinator updates the details of a placement coordinator
-func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request) {
+func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -261,7 +257,6 @@ func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := db.InitDB()
 	if db == nil {
 		log.Println("Failed to initialize the database")
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

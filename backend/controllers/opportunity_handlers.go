@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
@@ -28,7 +27,7 @@ func GenerateOpportunityID(batch string, serial int) string {
 }
 
 
-func AddOpportunity(w http.ResponseWriter, r *http.Request) {
+func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	// log.Printf("Request Method: %s", r.Method)
 	// log.Printf("Request Headers: %+v", r.Header)
 	if r.Method != http.MethodPost {
@@ -78,7 +77,6 @@ func AddOpportunity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := db.InitDB()
 	tableName := "opportunities"
 	if utils.CheckTableExists(db, tableName) {
 		fmt.Printf("Table '%s' exists.\n", tableName)
@@ -179,7 +177,7 @@ func CreateOpportunitiesTable(db *sql.DB) {
 	}
 }
 
-func EditOpportunity(w http.ResponseWriter, r *http.Request) {
+func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -253,8 +251,7 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request) {
 		class_12_percentage_criteria = $21
 	WHERE id = $22;
 	`
-
-	_, err = db.DB.Exec(query,
+	_, err = db.Exec(query,
 		opportunity.Title,
 		opportunity.Company,
 		opportunity.Location,
@@ -289,7 +286,7 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func DeleteOpportunity(w http.ResponseWriter, r *http.Request){
+func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -307,8 +304,7 @@ func DeleteOpportunity(w http.ResponseWriter, r *http.Request){
 	}
 
 	query := `DELETE FROM opportunities WHERE id = $1`
-
-	result,err := db.DB.Exec(query,opportunityId)
+	result,err := db.Exec(query,opportunityId)
 
 	if err!=nil{
 		log.Printf("Error deleting opportunity: %v", err)
@@ -328,7 +324,7 @@ func DeleteOpportunity(w http.ResponseWriter, r *http.Request){
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Opportunity deleted successfully"))
 }
-func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request) {
+func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	type RequestPayload struct {
 		OpportunityID string `json:"opportunity_id"`
 		Completed     string `json:"completed"` // "YES" or "NO"
@@ -347,7 +343,7 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start database transaction
-	tx, err := db.DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		http.Error(w, "Failed to start database transaction", http.StatusInternalServerError)
 		return
@@ -412,7 +408,7 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	
 	type StatusUpdateResponse struct {
 		UpdatedOpportunities int    `json:"updated_opportunities"`
@@ -432,7 +428,7 @@ func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request) {
 		`
 	now := time.Now()
 
-	result, err := db.DB.Exec(query, now)
+	result, err := db.Exec(query, now)
 	if err != nil {
 		log.Printf("Error updating opportunity status: %v", err)
 		http.Error(w, "Failed to update opportunity status", http.StatusInternalServerError)
@@ -457,7 +453,7 @@ func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request) {
+func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	// Get the Opportunity ID from the request
 	opportunityID := r.URL.Query().Get("id")
 	if opportunityID == "" {
@@ -477,7 +473,7 @@ func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	`
 	var allowedBranchesRaw, allowedGendersRaw, coordinatorsRaw, attachedDocumentsRaw []byte
 	var opportunity models.Opportunity
-	err := db.DB.QueryRow(query, opportunityID).Scan(
+	err := db.QueryRow(query, opportunityID).Scan(
 		&opportunity.ID, &opportunity.Title, &opportunity.Company, &opportunity.Location,
 		&opportunity.Batch, &opportunity.CTC, &opportunity.CTCInfo, &opportunity.CGPA,
 		&opportunity.Category, &opportunity.Backlog, &allowedBranchesRaw, &allowedGendersRaw,
@@ -526,7 +522,7 @@ func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(opportunity)
 }
 
-func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request){
+func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
 	// Get the batch from the query parameter
 	batch := r.URL.Query().Get("batch")
@@ -541,8 +537,7 @@ func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request){
 		FROM opportunities
 		WHERE batch = $1
 	`
-
-	rows, err := db.DB.Query(query, batch)
+	rows, err := db.Query(query, batch)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return

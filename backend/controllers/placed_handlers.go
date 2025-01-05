@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
 func GeneratePlacementID(batch string, serial int) string {
@@ -20,7 +18,7 @@ func GeneratePlacementID(batch string, serial int) string {
 	// Return formatted Placement-ID
 	return fmt.Sprintf("PL%s%s", batchCode, serialStr)
 }
-func AddPlacedStudent(w http.ResponseWriter, r *http.Request){
+func AddPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -50,10 +48,6 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "USN and OpportunityID are required", http.StatusBadRequest)
 		return
 	}
-
-	db := db.InitDB()
-	defer db.Close()
-
 	// Check if the student exists in the `students` table
 	var student struct {
 		Name   string
@@ -144,7 +138,7 @@ func CreatePlacedStudentsTable(db *sql.DB) {
 	}
 }
 
-func DeletePlacedStudent(w http.ResponseWriter, r *http.Request){
+func DeletePlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -161,7 +155,6 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	query := `DELETE FROM placed_students WHERE usn = $1`
-	db := db.InitDB()
 	result, err := db.Exec(query,usn)
 	if err!=nil{
 		log.Printf("Error deleting placed student: %v", err)
@@ -184,7 +177,7 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request){
 	w.Write([]byte("Placed student deleted successfully"))
 }
 
-func EditPlacedStudent(w http.ResponseWriter, r *http.Request){
+func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -207,7 +200,6 @@ func EditPlacedStudent(w http.ResponseWriter, r *http.Request){
 		http.Error(w, "USN is required", http.StatusBadRequest)
 		return
 	}
-	db := db.InitDB()
 	var exists bool
 	checkQuery := `SELECT EXISTS(SELECT 1 FROM placed_students WHERE usn = $1)`
 	err := db.QueryRow(checkQuery, placed_student.USN).Scan(&exists)

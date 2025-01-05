@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-
-	"Github.com/Aryan-2511/Placement_NIE/db"
+	"database/sql"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
 
-func GetPlacedStudents(w http.ResponseWriter, r *http.Request){
+func GetPlacedStudents(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
 	userRole := r.Header.Get("Role")
 	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
@@ -17,7 +16,7 @@ func GetPlacedStudents(w http.ResponseWriter, r *http.Request){
 		return
 	}
 	query := `SELECT id,usn,name,email,branch,batch,company,package,placement_date,contact,placement_type FROM placed_students`
-	rows,err  := db.DB.Query(query)
+	rows,err  := db.Query(query)
 	if err != nil {
 		log.Printf("Error fetching placed students data")
 		http.Error(w, err.Error(), http.StatusInternalServerError)

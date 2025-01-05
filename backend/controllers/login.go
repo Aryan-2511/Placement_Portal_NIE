@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,7 +20,7 @@ func CheckPasswordHash(password, hash string) error {
 	return err
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -58,7 +56,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DB.QueryRow(query, loginRequest.Email).Scan(&hashedPassword, &name, &verificationStatus)
+	err := db.QueryRow(query, loginRequest.Email).Scan(&hashedPassword, &name, &verificationStatus)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return

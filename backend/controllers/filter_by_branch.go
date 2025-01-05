@@ -4,11 +4,11 @@ import(
 	"encoding/json"
 	"log"
 	"net/http"
-	"Github.com/Aryan-2511/Placement_NIE/db"
+	"database/sql"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
 
-func FilterByBranch(w http.ResponseWriter,r *http.Request){
+func FilterByBranch(w http.ResponseWriter,r *http.Request,db *sql.DB){
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -21,8 +21,7 @@ func FilterByBranch(w http.ResponseWriter,r *http.Request){
 	}
 
 	query := `SELECT name, usn, college_email, personal_email, contact, branch, batch, current_cgpa FROM students WHERE branch = $1`
-	
-	rows,err := db.DB.Query(query,branch)
+	rows,err := db.Query(query,branch)
 	
 	if err!=nil{
 		log.Printf("Error querying database: %v", err)

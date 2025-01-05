@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"time"
 
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func ApplyHandler(w http.ResponseWriter, r *http.Request) {
+
+func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -28,9 +28,8 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-
 	var opportunityStatus string
-	err = db.DB.QueryRow("SELECT status FROM opportunities WHERE id = $1", request.OpportunityID).Scan(&opportunityStatus)
+	err = db.QueryRow("SELECT status FROM opportunities WHERE id = $1", request.OpportunityID).Scan(&opportunityStatus)
 	if err != nil {
 		http.Error(w, "Opportunity not found", http.StatusNotFound)
 		return
@@ -45,7 +44,7 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request) {
 	var student models.User
 	studentQuery := `SELECT usn, name, current_cgpa, class_10_percentage, class_12_percentage, branch, batch, backlogs, gender 
                      FROM students WHERE usn = $1`
-	err = db.DB.QueryRow(studentQuery, request.StudentUSN).Scan(
+	err = db.QueryRow(studentQuery, request.StudentUSN).Scan(
 		&student.USN,
 		&student.Name,
 		&student.CurrentCGPA,
@@ -68,7 +67,7 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request) {
 	opportunityQuery := `SELECT id, cgpa, class_10_percentage_criteria, class_12_percentage_criteria, allowed_branches, 
                          batch, backlog, allowed_genders, registration_date 
                          FROM opportunities WHERE id = $1`
-	err = db.DB.QueryRow(opportunityQuery, request.OpportunityID).Scan(
+	err = db.QueryRow(opportunityQuery, request.OpportunityID).Scan(
 		&opportunity.ID,
 		&opportunity.CGPA,
 		&opportunity.Class_10_Percentage_Criteria,
@@ -123,8 +122,7 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request) {
 		OpportunityID: opportunity.ID,
 		AppliedAt:     time.Now(),
 	}
-	// Insert into database
-	db := db.InitDB()
+	
 	tableName := "applications"
 	if utils.CheckTableExists(db, tableName) {
 		fmt.Printf("Table '%s' exists.\n", tableName)
@@ -171,7 +169,7 @@ func CreateApplicationsTable(db *sql.DB){
 	}
 }
 
-func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request){
+func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
 	// Extract the student USN from query parameters
 	studentUSN := r.URL.Query().Get("usn")
@@ -200,9 +198,8 @@ func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request){
 			ORDER BY 
 				applications.applied_at DESC
 		`
-
 	// Execute the query
-	rows, err := db.DB.Query(query, studentUSN)
+	rows, err := db.Query(query, studentUSN)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return

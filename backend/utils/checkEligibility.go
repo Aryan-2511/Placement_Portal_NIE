@@ -25,7 +25,8 @@ func CheckEligibility(student models.User, opportunity models.Opportunity) []Eli
 
 	var packageAmount int
 	query := `SELECT package FROM placed_students WHERE usn = $1`
-	err := db.DB.QueryRow(query, student.USN).Scan(&packageAmount)
+	db := db.InitDB()
+	err := db.QueryRow(query, student.USN).Scan(&packageAmount)
 
 	// Placement status check
 	if err == sql.ErrNoRows {

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"database/sql"
 	"strconv"
-	"Github.com/Aryan-2511/Placement_NIE/db"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
 
-func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request){
+func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -22,8 +22,7 @@ func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request){
 	}
 
 	query := `SELECT name, usn, email, contact, branch, company, package  FROM placed_students WHERE branch = $1`
-	
-	rows,err := db.DB.Query(query,branch)
+	rows,err := db.Query(query,branch)
 	
 	if err!=nil{
 		log.Printf("Error querying database: %v", err)
@@ -46,7 +45,7 @@ func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request){
 
 
 }
-func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request){
+func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -59,8 +58,7 @@ func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request){
 	}
 
 	query := `SELECT name, usn, email, contact, branch, company, package  FROM placed_students WHERE company = $1`
-	
-	rows,err := db.DB.Query(query,company)
+	rows,err := db.Query(query,company)
 	
 	if err!=nil{
 		log.Printf("Error querying database: %v", err)
@@ -82,7 +80,7 @@ func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(students)
 
 }
-func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request){
+func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodGet{
 		http.Error(w, "Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -118,7 +116,7 @@ func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request){
 	query := `SELECT name, usn, email, contact, branch, company, package
 			FROM placed_students WHERE package BETWEEN $1 AND $2
 			ORDER BY package` + order
-	rows,err := db.DB.Query(query,minCTC,maxCTC)
+	rows,err := db.Query(query,minCTC,maxCTC)
 	if err!=nil{
 		log.Printf("Error querying database: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -140,24 +138,24 @@ func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(students)
 
 }
-func FilterPlacedHandler(w http.ResponseWriter, r *http.Request){
+func FilterPlacedHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodGet{
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
 	if branch := r.URL.Query().Get("branch");branch!=""{
-		FilterPlacedByBranch(w,r)
+		FilterPlacedByBranch(w,r,db)
 		return
 	} 
 
 	if company := r.URL.Query().Get("company");company!=""{
-		FilterPlacedByCompany(w,r)
+		FilterPlacedByCompany(w,r,db)
 		return
 	}
 	 
 	if r.URL.Query().Has("min_ctc")||r.URL.Query().Has("max_ctc") {
-		FilterPlacedByCTC(w,r)
+		FilterPlacedByCTC(w,r,db)
 		return
 	}
 	http.Error(w, "Invalid or missing filter parameters", http.StatusBadRequest)

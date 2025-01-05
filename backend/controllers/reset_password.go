@@ -2,10 +2,10 @@ package controllers
 import(
 	"encoding/json"
 	"log"
+	"database/sql"
 	"net/http"
-	"Github.com/Aryan-2511/Placement_NIE/db"
 )
-func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	var request struct {
 		Token       string `json:"token"`
 		NewPassword string `json:"new_password"`
@@ -26,7 +26,8 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		SET password_hash = $1, reset_token = NULL
 		WHERE reset_token = $2
 	`
-	_, err = db.DB.Exec(query, hashedPassword, request.Token)
+
+	_, err = db.Exec(query, hashedPassword, request.Token)
 	if err != nil {
 		log.Printf("Database error: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
