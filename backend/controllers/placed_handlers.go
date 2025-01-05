@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
 	"Github.com/Aryan-2511/Placement_NIE/models"
+	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 func GeneratePlacementID(batch string, serial int) string {
 	// Format serial number as a 4-digit string
@@ -34,7 +36,13 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
 		return
 	}
-
+	tableName := "placed_students"
+	if utils.CheckTableExists(db, tableName) {
+		fmt.Printf("Table '%s' exists.\n", tableName)
+	} else {
+		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
+		CreatePlacedStudentsTable(db)
+	}
 	var payload struct {
 		USN           string `json:"usn"`
 		OpportunityID string `json:"opportunity_id"`
@@ -115,19 +123,20 @@ func CreatePlacedStudentsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS placed_students (
     id VARCHAR(15) PRIMARY KEY,
-    usn VARCHAR(10) NOT NULL REFERENCES students(usn),
-	opportunity_id NOT NULL REFERENCES opportunities(id),
+    usn VARCHAR(10) NOT NULL,
+    opportunity_id VARCHAR(15) NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     branch VARCHAR(50) NOT NULL,
-	batch  VARCHAR(10) NOT NULL,
+    batch VARCHAR(10) NOT NULL,
     company VARCHAR(100) NOT NULL,
     package NUMERIC(10, 2) NOT NULL,
     placement_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	contact VARCHAR(15) NOT NULL,
-	placement_type VARCHAR(50) DEFAULT 'PLACEMENT'
+    contact VARCHAR(15) NOT NULL,
+    placement_type VARCHAR(50) DEFAULT 'PLACEMENT',
+    FOREIGN KEY (usn) REFERENCES students(usn),
+    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id)
 	);
-
 	`
 
 	_, err := db.Exec(query)
