@@ -56,7 +56,7 @@ func CheckEligibility(student models.User, opportunity models.Opportunity) []Eli
 		})
 	}
 	//CGPA 
-	if student.CurrentCGPA >= opportunity.CGPA {
+	if student.Current_CGPA >= opportunity.CGPA {
 		criteria = append(criteria, EligibilityCriterion{Criterion: "CGPA Criteria", Passed: true})
 	} else {
 		criteria = append(criteria, EligibilityCriterion{

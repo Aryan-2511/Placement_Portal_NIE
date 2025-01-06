@@ -32,7 +32,7 @@ func FilterByBatch(w http.ResponseWriter,r *http.Request,db *sql.DB){
 	var students []models.User
 	for rows.Next(){
 		var student models.User
-		if err := rows.Scan(&student.Name, &student.USN, &student.College_Email, &student.Personal_Email, &student.Contact, &student.Branch, &student.Batch, &student.CurrentCGPA); err!=nil{
+		if err := rows.Scan(&student.Name, &student.USN, &student.College_Email, &student.Personal_Email, &student.Contact, &student.Branch, &student.Batch, &student.Current_CGPA); err!=nil{
 			log.Printf("Error scanning row: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return

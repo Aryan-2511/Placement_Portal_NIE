@@ -47,7 +47,7 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	err = db.QueryRow(studentQuery, request.StudentUSN).Scan(
 		&student.USN,
 		&student.Name,
-		&student.CurrentCGPA,
+		&student.Current_CGPA,
 		&student.Class_10_Percentage,
 		&student.Class_12_Percentage,
 		&student.Branch,

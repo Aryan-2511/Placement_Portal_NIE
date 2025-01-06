@@ -66,7 +66,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	`
 	_, err = db.Exec(query, user.Name, user.USN, user.DOB, user.College_Email, user.Personal_Email, user.Branch, user.Batch, user.Address, user.Contact, user.Gender, user.Category,
 		user.Aadhar, user.PAN, user.Class_10_Percentage, user.Class_10_Year, user.Class_10_Board,
-		user.Class_12_Percentage, user.Class_12_Year,user.Class_12_Board, user.CurrentCGPA,
+		user.Class_12_Percentage, user.Class_12_Year,user.Class_12_Board, user.Current_CGPA,
 		user.Backlogs, hashedPassword, user.Role, false, verificationToken)
 	
 	if err != nil {
