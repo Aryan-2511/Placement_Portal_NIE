@@ -15,6 +15,11 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
+    userRole := r.Header.Get("Role")
+	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+		return
+	}
 
     var event models.Schedule
     if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
@@ -85,7 +90,11 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-
+    userRole := r.Header.Get("Role")
+	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+		return
+	}
     // Extract schedule ID from the request
     scheduleID := r.URL.Query().Get("schedule_id")
     if scheduleID == "" {
@@ -115,7 +124,11 @@ func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-
+    userRole := r.Header.Get("Role")
+	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+		return
+	}
     // Extract schedule ID from the request
     scheduleID := r.URL.Query().Get("schedule_id")
     if scheduleID == "" {
@@ -165,7 +178,11 @@ func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     // Extract the optional "batch" filter from query parameters
     batch := r.URL.Query().Get("batch")
-
+    userRole := r.Header.Get("Role")
+	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+		return
+	}
     var (
         query string
         rows  *sql.Rows
