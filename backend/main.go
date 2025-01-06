@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"Github.com/Aryan-2511/Placement_NIE/utils"
+
 	"Github.com/Aryan-2511/Placement_NIE/controllers"
 	"Github.com/Aryan-2511/Placement_NIE/db"
+	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
 // func main() {
@@ -32,7 +33,8 @@ func main() {
 	db := db.InitDB()
 	defer db.Close()
 	http.Handle("/signup", withDatabaseAndCORS(db,controllers.SignupHandler))												// Route for student signup
-	http.Handle("/login", withDatabaseAndCORS(db,controllers.LoginHandler))												// Route for login
+	http.Handle("/login", withDatabaseAndCORS(db,controllers.LoginHandler))													// Route for login
+	http.Handle("/student/details", withDatabaseAndCORS(db,controllers.GetStudentDetailsHandler))													// Route for fetching student details
 	http.Handle("/placed-student/add",withDatabaseAndCORS(db,controllers.AddPlacedStudent))									// Route for adding placed student
 	http.Handle("/placed-student/edit",withDatabaseAndCORS(db,controllers.EditPlacedStudent))								// Route for editing details of placed student
 	http.Handle("/placed-student/delete",withDatabaseAndCORS(db,controllers.DeletePlacedStudent))							// Route for deleting a placed student

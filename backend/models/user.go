@@ -24,4 +24,5 @@ type User struct {
 	Backlogs            int     `json:"backlogs"`
 	Password            string  `json:"password"`
 	Role                string  `json:"role"`
+	IsPlaced 			string  `json:"isPlaced"`
 }
