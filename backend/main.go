@@ -58,6 +58,12 @@ func main() {
 	http.Handle("/placement-coordinator/edit", withDatabaseAndCORS(db,controllers.EditPlacementCoordinator)) 		// Route for editing details of a placement coordinator
 	http.Handle("/placement-coordinator/delete", withDatabaseAndCORS(db,controllers.DeletePlacementCoordinator)) 			// Route for deleting a placement coordinator
 	http.Handle("/get-placement-coordinators", withDatabaseAndCORS(db,controllers.GetAllPlacementCoordinators)) 			// Route for viewing a list of placement coordinators
+	http.Handle("/schedule/add", withDatabaseAndCORS(db,controllers.AddEvent)) 												// Route for adding an event to the schedule
+	http.Handle("/schedule/edit", withDatabaseAndCORS(db,controllers.EditEvent)) 												// Route for editing an event
+	http.Handle("/schedule/delete", withDatabaseAndCORS(db,controllers.DeleteEvent)) 												// Route for deleting an event 
+	http.Handle("/schedule/all", withDatabaseAndCORS(db,controllers.GetAllEvents)) 												// Route for getting all the events
+	http.Handle("/schedule/student", withDatabaseAndCORS(db,controllers.GetStudentEvents)) 												// Route for getting events of a student
+
 
 	// http.Handle("/protected", controllers.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Fprintln(w, "Welcome to the protected route!")
