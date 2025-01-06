@@ -183,21 +183,25 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		return
 	}
 
+	// Check user role
 	userRole := r.Header.Get("Role")
 	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized: Only admins or placement coordinators can edit opportunities", http.StatusUnauthorized)
 		return
 	}
 
+	// Get Opportunity ID from query parameters
+	opporID := r.URL.Query().Get("opportunity_id")
+	if opporID == "" {
+		http.Error(w, "Opportunity ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Decode the request body into the Opportunity struct
 	var opportunity models.Opportunity
 	if err := json.NewDecoder(r.Body).Decode(&opportunity); err != nil {
 		log.Printf("Error decoding request body: %v", err)
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-
-	if opportunity.ID == "" {
-		http.Error(w, "Opportunity ID is required", http.StatusBadRequest)
 		return
 	}
 
@@ -273,7 +277,7 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		userRole,
 		opportunity.Class_10_Percentage_Criteria,
 		opportunity.Class_12_Percentage_Criteria,
-		opportunity.ID,
+		opporID,
 	)
 	if err != nil {
 		log.Printf("Error updating opportunity: %v", err)
