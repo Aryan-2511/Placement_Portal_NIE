@@ -35,6 +35,7 @@ func main() {
 	http.Handle("/signup", withDatabaseAndCORS(db,controllers.SignupHandler))												// Route for student signup
 	http.Handle("/login", withDatabaseAndCORS(db,controllers.LoginHandler))													// Route for login
 	http.Handle("/student/details", withDatabaseAndCORS(db,controllers.GetStudentDetailsHandler))													// Route for fetching student details
+	http.Handle("/student/edit", withDatabaseAndCORS(db,controllers.EditStudentDetailsHandler))													// Route for editing student details
 	http.Handle("/placed-student/add",withDatabaseAndCORS(db,controllers.AddPlacedStudent))									// Route for adding placed student
 	http.Handle("/placed-student/edit",withDatabaseAndCORS(db,controllers.EditPlacedStudent))								// Route for editing details of placed student
 	http.Handle("/placed-student/delete",withDatabaseAndCORS(db,controllers.DeletePlacedStudent))							// Route for deleting a placed student

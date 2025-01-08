@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
@@ -22,7 +23,7 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 		SELECT name, usn, dob, college_email, personal_email, branch, batch, address, 
 			contact, gender, category, aadhar, pan, class_10_percentage, class_10_year, 
 			class_10_board, class_12_percentage, class_12_year, class_12_board, 
-			current_cgpa, backlogs, role, isPlaced
+			current_cgpa, backlogs, role, isPlaced, resume_link
 		FROM students
 		WHERE usn = $1
 	`
@@ -34,7 +35,7 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 		&student.Contact, &student.Gender, &student.Category, &student.Aadhar,
 		&student.PAN, &student.Class_10_Percentage, &student.Class_10_Year,
 		&student.Class_10_Board, &student.Class_12_Percentage, &student.Class_12_Year,
-		&student.Class_12_Board, &student.Current_CGPA, &student.Backlogs, &student.Role, &student.IsPlaced,
+		&student.Class_12_Board, &student.Current_CGPA, &student.Backlogs, &student.Role, &student.IsPlaced,&student.Resume_link,
 	)
 
 	if err != nil {
@@ -56,3 +57,96 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 		return
 	}
 }
+
+func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract USN from the request query parameters
+	usn := r.URL.Query().Get("usn")
+	if usn == "" {
+		http.Error(w, "USN is required", http.StatusBadRequest)
+		return
+	}
+
+	// Parse the request body to get updated details
+	var updatedStudent models.User
+	if err := json.NewDecoder(r.Body).Decode(&updatedStudent); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Construct the SQL query dynamically based on provided fields
+	query := "UPDATE students SET "
+	var args []interface{}
+	var updates []string
+
+	if updatedStudent.Name != "" {
+		updates = append(updates, "name = ?")
+		args = append(args, updatedStudent.Name)
+	}
+	if updatedStudent.DOB != "" {
+		updates = append(updates, "dob = ?")
+		args = append(args, updatedStudent.DOB)
+	}
+	if updatedStudent.College_Email != "" {
+		updates = append(updates, "college_email = ?")
+		args = append(args, updatedStudent.College_Email)
+	}
+	if updatedStudent.Personal_Email != "" {
+		updates = append(updates, "personal_email = ?")
+		args = append(args, updatedStudent.Personal_Email)
+	}
+	if updatedStudent.Contact != "" {
+		updates = append(updates, "contact = ?")
+		args = append(args, updatedStudent.Contact)
+	}
+	if updatedStudent.Branch != "" {
+		updates = append(updates, "branch = ?")
+		args = append(args, updatedStudent.Branch)
+	}
+	if updatedStudent.Batch != "" {
+		updates = append(updates, "batch = ?")
+		args = append(args, updatedStudent.Batch)
+	}
+	if updatedStudent.Address != "" {
+		updates = append(updates, "batch = ?")
+		args = append(args, updatedStudent.Batch)
+	}
+	if updatedStudent.Current_CGPA != 0 {
+		updates = append(updates, "current_cgpa = ?")
+		args = append(args, updatedStudent.Current_CGPA)
+	}
+	if updatedStudent.Backlogs >= 0 {
+		updates = append(updates, "backlogs = ?")
+		args = append(args, updatedStudent.Backlogs)
+	}
+	if updatedStudent.Resume_link != "" {
+		updates = append(updates, "resume_link = ?")
+		args = append(args, updatedStudent.Resume_link)
+	}
+
+	// Ensure there are updates to apply
+	if len(updates) == 0 {
+		http.Error(w, "No fields to update", http.StatusBadRequest)
+		return
+	}
+
+	query += " " + strings.Join(updates, ", ") + " WHERE usn = ?"
+	args = append(args, usn)
+
+	// Execute the update query
+	_, err := db.Exec(query, args...)
+	if err != nil {
+		log.Printf("Error updating student details: %v", err)
+		http.Error(w, "Error updating student details", http.StatusInternalServerError)
+		return
+	}
+
+	// Send success response
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Student details updated successfully"})
+}
+
