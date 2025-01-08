@@ -1,16 +1,22 @@
-import { updateOpportunity } from '@/services/apiOpportunities';
-import { useMutation } from 'react-query';
-import { useParams } from 'react-router-dom';
+import { updateCurrentOpportunity } from '@/services/apiOpportunities';
+import toast from 'react-hot-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function useUpdateOpportunity() {
-  const { opportunityId } = useParams();
-  const mutation = useMutation({
-    mutationKey: ['opportunity', opportunityId],
-    mutationFn: (updatedOpportunity) =>
-      updateOpportunity(opportunityId, updatedOpportunity),
-    retry: 1,
-    enabled: !!opportunityId,
-  });
+  const queryClient = useQueryClient();
 
-  return mutation;
+  const { mutate: updateOpportunity, isPending: isUpdating } = useMutation(
+    {
+      mutationFn: ({ opportunityId, opportunityData, role }) =>
+        updateCurrentOpportunity(opportunityId, opportunityData, role),
+      onSuccess: (opportunity) => {
+        toast.success('Opporunity updated successfully!');
+        queryClient.setQueryData(['opportunity', opportunity]);
+      },
+      onError: (err) => toast.error(err.message),
+    },
+    queryClient
+  );
+
+  return { updateOpportunity, isUpdating };
 }

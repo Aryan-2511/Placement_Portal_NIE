@@ -50,7 +50,7 @@ export async function getOpportunity(id) {
   }
 }
 
-export async function updateOpportunity(id, updatedOpportunity, role) {
+export async function updateCurrentOpportunity(id, updatedOpportunity, role) {
   try {
     const response = await axios.put(`${API_URL}/edit`, updatedOpportunity, {
       headers: {

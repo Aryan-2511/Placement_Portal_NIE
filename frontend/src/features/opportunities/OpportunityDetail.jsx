@@ -1,6 +1,6 @@
 import { HiMapPin, HiCurrencyDollar, HiMiniUserGroup } from 'react-icons/hi2';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import HeadingText from '@/components/shared/HeadingText';
 import ParagraphText from '@/components/shared/ParagraphText';
@@ -10,15 +10,15 @@ import HrBreak from '@/components/ui/HrBreak';
 import useOpportunity from './useOpportunity';
 import { useRole } from '@/context/UserRoleContext';
 import dateFormatter from '@/utils/dateFormatter';
-import { updateOpportunity } from '@/services/apiOpportunities';
-// import useUpdateOpportunity from './useUpdateOpportunity';
+import useUpdateOpportunity from './useUpdateOpportunity';
 
 function OpportunityDetail() {
   const [isEditable, setIsEditable] = useState(false);
   const { opportunity, isLoading } = useOpportunity();
-  // const updateOpportunityMutation = useUpdateOpportunity();
+  const { updateOpportunity, isUpdating } = useUpdateOpportunity();
   const [opportunityData, setOpportunityData] = useState({});
   const { role } = useRole();
+  const { opportunityId } = useParams();
 
   useEffect(() => {
     setOpportunityData(opportunity);
@@ -34,7 +34,6 @@ function OpportunityDetail() {
 
   const handleSubmit = () => {
     // Submit logic here
-    setIsEditable(false);
     opportunityData.ctc = parseFloat(opportunityData.ctc);
     opportunityData.cgpa = parseFloat(opportunityData.cgpa);
     opportunityData.class_10_percentage_criteria = parseFloat(
@@ -51,24 +50,23 @@ function OpportunityDetail() {
       opportunityData.allowed_genders =
         opportunityData.allowed_genders?.split(',');
     }
-    updateOpportunity(opportunity.id, opportunityData, role)
-      .then((res) => console.log(res))
-      .catch((error) => console.log(error));
 
-    // updateOpportunityMutation.mutate(opportunityData, {
-    //   onSuccess: (updatedData) => {
-    //     // Update local state with the response data
-    //     setOpportunityData(updatedData);
-    //     setIsEditable(false);
-    //     console.log('Opportunity updated successfully:', updatedData);
-    //   },
-    //   onError: (error) => {
-    //     console.error('Failed to update opportunity:', error);
-    //   },
-    // });
-
-    console.log('Og oppr:', opportunity);
-    console.log('Updated Opportunity Data:', opportunityData);
+    updateOpportunity(
+      { opportunityId, opportunityData, role },
+      {
+        onSuccess: (updatedOpportunity) => {
+          setOpportunityData((prevData) => ({
+            ...prevData,
+            ...updatedOpportunity,
+          }));
+          setIsEditable(false);
+          // console.log('successfull updation');
+        },
+        onError: (error) => {
+          console.error('Failed to update opportunity:', error);
+        },
+      }
+    );
   };
 
   const handleEdit = () => {
@@ -110,7 +108,7 @@ function OpportunityDetail() {
     { name: 'form_link', label: 'Form Link', type: 'url' },
   ];
 
-  if (isLoading || !opportunityData) return <Spinner />;
+  if (isLoading || !opportunityData || isUpdating) return <Spinner />;
 
   return (
     <div>
