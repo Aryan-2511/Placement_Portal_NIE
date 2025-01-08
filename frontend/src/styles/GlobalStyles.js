@@ -5,8 +5,8 @@ const GlobalStyles = createGlobalStyle`
 :root{
   &, &.light-mode{
     --color-grey-0 : #ffffff;
-    --color-grey-50 : #f3f3f3;
-    --color-grey-100 : #727272;
+    --color-grey-50 : #e6e6e6;
+    --color-grey-100 : #5E5E5E;
     --color-grey-600 : #3b3b3b;
 
     --color-blue-0 : #E5E5FF;
@@ -32,7 +32,7 @@ const GlobalStyles = createGlobalStyle`
     --color-grey-0 : #0B0916;
     --color-grey-50 : #14121F;
     --color-grey-100 : #AAAAAA;
-    --color-grey-600 : #C4C4C4;
+    --color-grey-600 : #d4d4d4;
 
     --color-white : #fff;
 
@@ -46,6 +46,16 @@ const GlobalStyles = createGlobalStyle`
     --color-green-100: #0B4324;
     --color-green-700: #BFFBD9;
   }
+
+  --color-brand-50: #eef2ff;   
+  --color-brand-100: #b3dff8; 
+  --color-brand-200: #87c6f2; 
+  --color-brand-300: #5aadf0; 
+  --color-brand-400: #3787d7; 
+  --color-brand-500: #1f5db5; 
+  --color-brand-600: #353587; 
+  --color-brand-700: #242466; 
+
 }
 
 
@@ -99,6 +109,12 @@ h5,
 h6 {
   overflow-wrap: break-word;
   hyphens: auto;
+}
+h3{
+  font-size: 2.4rem;
+  font-weight: 600;
+  margin-bottom: 3.6rem;
+  color: var(--color-grey-600);
 }`;
 
 export default GlobalStyles;

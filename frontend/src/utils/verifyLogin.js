@@ -7,7 +7,7 @@ export const verifyLogin = (email, password) => {
     return {
       valid: false,
       error:
-        "Invalid email format. Please follow the specified format: '2021is_johndoe_a@nie.ac.in'.",
+        "Invalid email format. Please follow the specified format: '20XXbb_johndoe_s@nie.ac.in'.",
     };
   }
 

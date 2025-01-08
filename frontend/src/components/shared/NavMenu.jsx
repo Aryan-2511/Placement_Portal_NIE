@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useDarkMode } from '@/context/DarkModeContext';
 import {
   HiMiniUser,
   HiSun,
@@ -8,24 +8,22 @@ import {
 import { NavLink } from 'react-router-dom';
 
 function NavMenu() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  function handleToggleDarkMode() {
-    setIsDarkMode((isDarkMode) => !isDarkMode);
-  }
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+
   return (
-    <ul className="flex items-center gap-8 text-[var(--color-blue-700)]">
+    <ul className="flex items-center gap-12 text-[var(--color-blue-700)]">
       <li>
-        <NavLink to="student/profile">
+        <NavLink to="/student/profile">
           <HiMiniUser size={'2.4rem'} />
         </NavLink>
       </li>
       <li>
-        <NavLink onClick={handleToggleDarkMode}>
+        <button onClick={toggleDarkMode}>
           {isDarkMode ? <HiSun size={'2.4rem'} /> : <HiMoon size={'2.4rem'} />}
-        </NavLink>
+        </button>
       </li>
       <li>
-        <NavLink to="student/logout">
+        <NavLink to="/student/logout">
           <HiMiniArrowRightStartOnRectangle size={'2.4rem'} />
         </NavLink>
       </li>

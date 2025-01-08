@@ -1,4 +1,8 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import {
+  Navigate,
+  RouterProvider,
+  createBrowserRouter,
+} from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 // Layouts
@@ -25,6 +29,11 @@ import ErrorPage from './pages/ErrorPage';
 // Utilities
 import PrivateRoute from './routes/PrivateRoute';
 import LandingPage from './pages/LandingPage';
+import OpportunityDetail from './features/opportunities/OpportunityDetail';
+import { DarkModeProvider } from './context/DarkModeContext';
+import { QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { UserRoleProvider } from './context/UserRoleContext';
 
 const router = createBrowserRouter([
   {
@@ -46,8 +55,16 @@ const router = createBrowserRouter([
               </PrivateRoute>
             ),
             children: [
-              { index: true, path: 'dashboard', element: <StudentDashboard /> },
+              {
+                index: true,
+                element: <Navigate replace to="dashboard" />,
+              },
+              { path: 'dashboard', element: <StudentDashboard /> },
               { path: 'opportunities', element: <Opportunities /> },
+              {
+                path: 'opportunities/:opportunityId',
+                element: <OpportunityDetail />,
+              },
               { path: 'applications', element: <Applications /> },
               { path: 'profile', element: <Profile /> },
               { path: 'feedback', element: <Feedback /> },
@@ -77,38 +94,53 @@ const router = createBrowserRouter([
   },
 ]);
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // staleTime: 60 * 1000,
+      staleTime: 0,
+    },
+  },
+});
+
 const App = () => {
   return (
     <>
-      <GlobalStyles />
-      <Toaster
-        position="top-center"
-        reverseOrder={false}
-        gutter={8}
-        containerClassName=""
-        containerStyle={{ margin: '8px' }}
-        toastOptions={{
-          // Define default options
-          className: '',
-          duration: 5000,
-          style: {
-            fontSize: '16px',
-            maxWidth: '500px',
-            padding: '16px 24px',
-            backgroundColor: 'var(--color-grey-0)',
-            color: 'var(--color-grey-700)',
-          },
+      <DarkModeProvider>
+        <UserRoleProvider role={'ADMIN'}>
+          <QueryClientProvider client={queryClient}>
+            <GlobalStyles />
+            <Toaster
+              position="top-center"
+              reverseOrder={false}
+              gutter={8}
+              containerClassName=""
+              containerStyle={{ margin: '8px' }}
+              toastOptions={{
+                // Define default options
+                className: '',
+                duration: 5000,
+                style: {
+                  fontSize: '16px',
+                  maxWidth: '500px',
+                  padding: '16px 24px',
+                  backgroundColor: 'var(--color-grey-0)',
+                  color: 'var(--color-grey-700)',
+                },
 
-          // Default options for specific types
-          success: {
-            duration: 3000,
-          },
-          error: {
-            duration: 5000,
-          },
-        }}
-      />
-      <RouterProvider router={router} />
+                // Default options for specific types
+                success: {
+                  duration: 3000,
+                },
+                error: {
+                  duration: 5000,
+                },
+              }}
+            />
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </UserRoleProvider>
+      </DarkModeProvider>
     </>
   );
 };
