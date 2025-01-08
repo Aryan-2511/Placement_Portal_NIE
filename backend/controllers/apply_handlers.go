@@ -151,8 +151,8 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 func CreateApplicationsTable(db *sql.DB){
 	query := `
 		CREATE TABLE IF NOT EXISTS applications (
-    	id SERIAL,
-    	student_usn VARCHAR(20) PRIMARY KEY,
+    	id SERIAL PRIMARY KEY,
+    	student_usn VARCHAR(20) NOT NULL,
     	student_name VARCHAR(100) NOT NULL,
     	opportunity_id VARCHAR(20) NOT NULL,
     	applied_at TIMESTAMP NOT NULL,
