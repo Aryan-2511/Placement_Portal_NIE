@@ -21,13 +21,29 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	// Parse request body
 	var request struct {
 		StudentUSN    string `json:"student_usn"`
-		OpportunityID string    `json:"opportunity_id"`
+		OpportunityID string `json:"opportunity_id"`
 	}
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	// Check if the student has already applied for the same opportunity
+	var existingApplicationID int
+	checkQuery := `SELECT id FROM applications WHERE student_usn = $1 AND opportunity_id = $2`
+	err = db.QueryRow(checkQuery, request.StudentUSN, request.OpportunityID).Scan(&existingApplicationID)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("Error checking existing application: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if existingApplicationID != 0 {
+		http.Error(w, "You have already applied for this opportunity", http.StatusConflict)
+		return
+	}
+
 	var opportunityStatus string
 	err = db.QueryRow("SELECT status FROM opportunities WHERE id = $1", request.OpportunityID).Scan(&opportunityStatus)
 	if err != nil {
@@ -156,9 +172,10 @@ func CreateApplicationsTable(db *sql.DB){
     	student_name VARCHAR(100) NOT NULL,
     	opportunity_id VARCHAR(20) NOT NULL,
     	applied_at TIMESTAMP NOT NULL,
-		status VARCHAR(10) DEFAULT 'PROCESSING',
+    	status VARCHAR(10) DEFAULT 'PROCESSING',
     	FOREIGN KEY (student_usn) REFERENCES students(usn),
-    	FOREIGN KEY (opportunity_id) REFERENCES opportunities(id)
+    	FOREIGN KEY (opportunity_id) REFERENCES opportunities(id),
+    	CONSTRAINT unique_application UNIQUE (student_usn, opportunity_id)
 	);
 	`
 	_, err := db.Exec(query)
