@@ -20,9 +20,10 @@ type User struct {
 	Class_12_Percentage float64 `json:"class_12_percentage"`
 	Class_12_Year       int     `json:"class_12_year"`
 	Class_12_Board      string  `json:"class_12_board"`
-	Current_CGPA         float64 `json:"current_cgpa"`
+	Current_CGPA        float64 `json:"current_cgpa"`
 	Backlogs            int     `json:"backlogs"`
 	Password            string  `json:"password"`
 	Role                string  `json:"role"`
-	IsPlaced 			string  `json:"isPlaced"`
+	IsPlaced            string  `json:"isPlaced"`
+	Resume_link         string  `json:"resume_link"`
 }

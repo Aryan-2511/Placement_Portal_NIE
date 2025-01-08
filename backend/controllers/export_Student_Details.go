@@ -61,6 +61,7 @@ func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *
 		"class_12_board":       "students.class_12_board",
 		"current_cgpa":         "students.current_cgpa",
 		"backlogs":             "students.backlogs",
+		"resume_link":			"students.resume_link",
 	}
 
 	// Validate selected fields and build SQL query dynamically

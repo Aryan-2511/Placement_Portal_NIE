@@ -61,13 +61,13 @@ func SignupHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		INSERT INTO students (
 			name, usn, dob, college_email, personal_email,branch, batch, address, contact, gender, category, aadhar, pan,
 			class_10_percentage, class_10_year, class_10_board, class_12_percentage, class_12_year,
-			class_12_board, current_cgpa, backlogs,password_hash, role, is_verified, verification_token
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+			class_12_board, current_cgpa, backlogs,password_hash, role, is_verified, verification_token,resume_link
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
 	`
 	_, err = db.Exec(query, user.Name, user.USN, user.DOB, user.College_Email, user.Personal_Email, user.Branch, user.Batch, user.Address, user.Contact, user.Gender, user.Category,
 		user.Aadhar, user.PAN, user.Class_10_Percentage, user.Class_10_Year, user.Class_10_Board,
 		user.Class_12_Percentage, user.Class_12_Year,user.Class_12_Board, user.Current_CGPA,
-		user.Backlogs, hashedPassword, user.Role, false, verificationToken)
+		user.Backlogs, hashedPassword, user.Role, false, verificationToken,user.Resume_link)
 	
 	if err != nil {
 		log.Printf("Error inserting data: %v\n", err)
@@ -117,7 +117,8 @@ func CreateStudentsTable(db *sql.DB) {
 			is_verified BOOLEAN DEFAULT FALSE,
 			verification_token TEXT,
 			reset_token TEXT,
-			isPlaced VARCHAR(15) DEFAULT 'NO'
+			isPlaced VARCHAR(15) DEFAULT 'NO',
+			resume_link VARCHAR(100)
 		);
 	`
 
