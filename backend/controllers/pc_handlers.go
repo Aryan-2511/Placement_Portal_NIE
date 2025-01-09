@@ -12,17 +12,24 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" {
-		http.Error(w, "Unauthorized: Only admins can add placement coordinators", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN"{
+		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 	
 	var coordinator models.PlacementCoordinator
 	if err := json.NewDecoder(r.Body).Decode(&coordinator); err!=nil{
@@ -121,12 +128,24 @@ func CreatePlacementCoordinatorsTable(db *sql.DB) {
 	}
 }
 
-func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	if db == nil {
 		log.Println("Failed to initialize the database")
@@ -169,16 +188,23 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.
 	json.NewEncoder(w).Encode(coordinators)
 }
 
-func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins can delete placement coordinators", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN"{
+		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	usn := r.URL.Query().Get("usn")
 	if usn == ""{
@@ -195,7 +221,7 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.D
 
 	var userID string
 	query := `SELECT user_id FROM placement_coordinators WHERE usn = $1`
-	err := db.QueryRow(query, usn).Scan(&userID)
+	err = db.QueryRow(query, usn).Scan(&userID)
 	if err == sql.ErrNoRows {
 		http.Error(w, "Placement coordinator not found", http.StatusNotFound)
 		return
@@ -239,17 +265,24 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.D
 	w.Write([]byte("Placement coordinator deleted successfully"))
 }
 // EditPlacementCoordinator updates the details of a placement coordinator
-func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" {
-		http.Error(w, "Unauthorized: Only admins can edit placement coordinators", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" {
+		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	var coordinator models.PlacementCoordinator
 	if err := json.NewDecoder(r.Body).Decode(&coordinator); err != nil {

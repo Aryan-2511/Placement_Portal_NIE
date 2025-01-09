@@ -20,17 +20,24 @@ func GeneratePlacementID(batch string, serial int) string {
 	// Return formatted Placement-ID
 	return fmt.Sprintf("PL%s%s", batchCode, serialStr)
 }
-func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can add placed students", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	tableName := "placed_students"
 	if utils.CheckTableExists(db, tableName) {
@@ -63,7 +70,7 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		Contact string
 	}
 	queryStudent := `SELECT name, college_email, branch, batch, contact FROM students WHERE usn = $1`
-	err := db.QueryRow(queryStudent, payload.USN).Scan(&student.Name, &student.Email, &student.Branch, &student.Batch, &student.Contact)
+	err = db.QueryRow(queryStudent, payload.USN).Scan(&student.Name, &student.Email, &student.Branch, &student.Batch, &student.Contact)
 	if err != nil {
 		log.Printf("Error fetching student details: %v", err)
 		http.Error(w, "Student not found in the database", http.StatusBadRequest)
@@ -137,17 +144,24 @@ func CreatePlacedStudentsTable(db *sql.DB) {
 		log.Println("Table `placed_students` created or already exists.")
 	}
 }
-func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can delete placed students", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	usn := r.URL.Query().Get("usn")
 	if usn == "" {
@@ -189,17 +203,24 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	w.Write([]byte("Placed student deleted successfully"))
 }
 
-func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can edit opportunities", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	var placed_student models.PlacedStudent
 	if err := json.NewDecoder(r.Body).Decode(&placed_student); err != nil {
@@ -214,7 +235,7 @@ func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	}
 	var exists bool
 	checkQuery := `SELECT EXISTS(SELECT 1 FROM placed_students WHERE usn = $1)`
-	err := db.QueryRow(checkQuery, placed_student.USN).Scan(&exists)
+	err = db.QueryRow(checkQuery, placed_student.USN).Scan(&exists)
 	if err != nil {
 		log.Printf("Error checking if USN exists: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

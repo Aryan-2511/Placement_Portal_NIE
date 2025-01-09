@@ -27,7 +27,7 @@ func GenerateOpportunityID(batch string, serial int) string {
 }
 
 
-func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB, secretKey string) {
 	// log.Printf("Request Method: %s", r.Method)
 	// log.Printf("Request Headers: %+v", r.Header)
 	if r.Method != http.MethodPost {
@@ -35,9 +35,15 @@ func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" {
+		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
 		return
 	}
 
@@ -177,16 +183,21 @@ func CreateOpportunitiesTable(db *sql.DB) {
 	}
 }
 
-func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Check user role
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can edit opportunities", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
 		return
 	}
 
@@ -290,17 +301,24 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 }
 
 
-func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can delete opportunities", http.StatusUnauthorized)
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 	opportunityId := r.URL.Query().Get("id")
 	if opportunityId == ""{
 		http.Error(w,"Opportunity ID is required", http.StatusBadRequest)
@@ -328,7 +346,7 @@ func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Opportunity deleted successfully"))
 }
-func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	type RequestPayload struct {
 		OpportunityID string `json:"opportunity_id"`
 		Completed     string `json:"completed"` // "YES" or "NO"
@@ -345,6 +363,18 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 		http.Error(w, "Invalid value for completed field. Use 'YES' or 'NO'.", http.StatusBadRequest)
 		return
 	}
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	// Start database transaction
 	tx, err := db.Begin()
@@ -412,7 +442,7 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	
 	type StatusUpdateResponse struct {
 		UpdatedOpportunities int    `json:"updated_opportunities"`
@@ -423,6 +453,18 @@ func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *s
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
 	query := `
 		UPDATE opportunities
@@ -457,7 +499,19 @@ func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *s
 }
 
 
-func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 	// Get the Opportunity ID from the request
 	opportunityID := r.URL.Query().Get("id")
 	if opportunityID == "" {
@@ -477,7 +531,7 @@ func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql
 	`
 	var allowedBranchesRaw, allowedGendersRaw, coordinatorsRaw, attachedDocumentsRaw []byte
 	var opportunity models.Opportunity
-	err := db.QueryRow(query, opportunityID).Scan(
+	err = db.QueryRow(query, opportunityID).Scan(
 		&opportunity.ID, &opportunity.Title, &opportunity.Company, &opportunity.Location,
 		&opportunity.Batch, &opportunity.CTC, &opportunity.CTCInfo, &opportunity.CGPA,
 		&opportunity.Category, &opportunity.Backlog, &allowedBranchesRaw, &allowedGendersRaw,
@@ -526,8 +580,20 @@ func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql
 	json.NewEncoder(w).Encode(opportunity)
 }
 
-func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	
+	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 	// Get the batch from the query parameter
 	batch := r.URL.Query().Get("batch")
 	if batch == "" {

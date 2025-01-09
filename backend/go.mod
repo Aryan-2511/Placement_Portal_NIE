@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/lib/pq v1.10.9
-	golang.org/x/crypto v0.29.0
+	golang.org/x/crypto v0.31.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 

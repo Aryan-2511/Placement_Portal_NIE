@@ -10,7 +10,7 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
 
-func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
 	// Extract USN from the request
 	usn := r.URL.Query().Get("usn")
 	if usn == "" {
@@ -58,7 +58,7 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 	}
 }
 
-func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
