@@ -50,7 +50,7 @@ const router = createBrowserRouter([
           {
             path: 'student',
             element: (
-              <PrivateRoute role="student">
+              <PrivateRoute role="STUDENT">
                 <MainLayout />
               </PrivateRoute>
             ),
@@ -74,7 +74,7 @@ const router = createBrowserRouter([
           {
             path: 'coordinator',
             element: (
-              <PrivateRoute role="coordinator">
+              <PrivateRoute role="COORDINATOR">
                 <MainLayout />
               </PrivateRoute>
             ),
@@ -107,7 +107,7 @@ const App = () => {
   return (
     <>
       <DarkModeProvider>
-        <UserRoleProvider role={'ADMIN'}>
+        <UserRoleProvider role={'STUDENT'}>
           <QueryClientProvider client={queryClient}>
             <GlobalStyles />
             <Toaster

@@ -11,6 +11,7 @@ import useOpportunity from './useOpportunity';
 import { useRole } from '@/context/UserRoleContext';
 import dateFormatter from '@/utils/dateFormatter';
 import useUpdateOpportunity from './useUpdateOpportunity';
+import { fields } from './opportunityFields';
 
 function OpportunityDetail() {
   const [isEditable, setIsEditable] = useState(false);
@@ -30,6 +31,10 @@ function OpportunityDetail() {
       ...prevData,
       [name]: value,
     }));
+  };
+
+  const handleApply = () => {
+    // code
   };
 
   const handleSubmit = () => {
@@ -69,44 +74,12 @@ function OpportunityDetail() {
     );
   };
 
-  const handleEdit = () => {
-    setIsEditable((prev) => !prev);
-  };
   const handleCancel = () => {
     setIsEditable((prev) => !prev);
     setOpportunityData(opportunity);
   };
 
   // Define field mappings
-  const fields = [
-    { name: 'company', label: 'Company', type: 'text' },
-    { name: 'title', label: 'Title', type: 'text' },
-    { name: 'job_description', label: 'Job Description', type: 'textarea' },
-    { name: 'additional_info', label: 'Additional Information', type: 'text' },
-    { name: 'location', label: 'Location', type: 'text' },
-    { name: 'ctc', label: 'CTC', type: 'number' },
-    { name: 'ctc_info', label: 'CTC Info', type: 'text' },
-    { name: 'allowed_branches', label: 'Allowed branches', type: 'text' },
-    {
-      name: 'class_10_percentage_criteria',
-      label: 'Class 10 or equivalent',
-      type: 'number',
-    },
-    {
-      name: 'class_12_percentage_criteria',
-      label: 'Class 12 or equivalent',
-      type: 'number',
-    },
-    {
-      name: 'cgpa',
-      label: 'CGPA',
-      type: 'number',
-    },
-    { name: 'allowed_genders', label: 'Allowed genders', type: 'text' },
-    { name: 'batch', label: 'Batch', type: 'text' },
-    { name: 'registration_date', label: 'Registration Deadline', type: 'date' },
-    { name: 'form_link', label: 'Form Link', type: 'url' },
-  ];
 
   if (isLoading || !opportunityData || isUpdating) return <Spinner />;
 
@@ -190,11 +163,19 @@ function OpportunityDetail() {
       {/* Buttons */}
       <div className="flex gap-[1.2rem] py-[1.2rem]">
         {role === 'STUDENT' && (
-          <Button disabled={opportunity.status !== 'ACTIVE'}>Apply</Button>
+          <Button
+            disabled={opportunity.status !== 'ACTIVE'}
+            onClick={handleApply}
+          >
+            Apply
+          </Button>
         )}
         {role === 'ADMIN' && opportunity.status === 'ACTIVE' && (
           <>
-            <Button disabled={isEditable} onClick={handleEdit}>
+            <Button
+              disabled={isEditable}
+              onClick={() => setIsEditable((curr) => !curr)}
+            >
               Edit details
             </Button>
             <Button

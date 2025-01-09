@@ -17,9 +17,9 @@ function Opportunity({ opportunity }) {
       <p className="text-[1.4rem]">
         {dateFormatter(opportunity.registration_date)}
       </p>
-      <p className="text-[1.4rem]">
+      <p className="text-[1.4rem] text-center">
         <span
-          className={`font-semibold  px-4 py-1 rounded-xl text-[1.4rem] ${
+          className={`font-semibold px-4 py-1 rounded-xl text-[1.4rem] ${
             opportunity.status === 'ACTIVE' ? 'bg-green-200' : 'bg-red-200'
           }`}
         >
