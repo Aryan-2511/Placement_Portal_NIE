@@ -8,7 +8,7 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/models"
 )
 
-func GetPlacedStudents(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func GetPlacedStudents(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	
 	userRole := r.Header.Get("Role")
 	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {

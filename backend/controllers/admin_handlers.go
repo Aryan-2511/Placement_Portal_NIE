@@ -24,7 +24,7 @@ func GenerateAdminID(role string, serial int) string {
 	return fmt.Sprintf("AD%s%s", roleCode[role], serialStr)
 }
 
-func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
+func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB,secretKey string){
 	if r.Method != http.MethodPost{
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -97,7 +97,7 @@ func CreateAdminsTable(db *sql.DB) {
 		log.Println("Admins table ensured to exist.")
 	}
 }
-func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return

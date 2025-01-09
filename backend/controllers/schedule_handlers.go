@@ -10,16 +10,23 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
     if r.Method != http.MethodPost {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-    userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
 
     var event models.Schedule
     if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
@@ -37,7 +44,7 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
     queryCount := `SELECT COUNT(*) FROM schedule WHERE batch = $1`
     var count int
-    err := db.QueryRow(queryCount, event.Batch).Scan(&count)
+    err = db.QueryRow(queryCount, event.Batch).Scan(&count)
     if err != nil {
         http.Error(w, "Error generating schedule ID", http.StatusInternalServerError)
         return
@@ -85,16 +92,23 @@ func CreateScheduleTable(db *sql.DB) {
 		log.Println("Schedule table ensured to exist.")
 	}
 }
-func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
     if r.Method != http.MethodDelete {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-    userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
     // Extract schedule ID from the request
     scheduleID := r.URL.Query().Get("schedule_id")
     if scheduleID == "" {
@@ -119,16 +133,23 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("Event deleted successfully"))
 }
-func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
     if r.Method != http.MethodPut {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-    userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
     // Extract schedule ID from the request
     scheduleID := r.URL.Query().Get("schedule_id")
     if scheduleID == "" {
@@ -175,32 +196,39 @@ func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("Event updated successfully"))
 }
-func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
     // Extract the optional "batch" filter from query parameters
     batch := r.URL.Query().Get("batch")
-    userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)
+    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
 		return
 	}
+
+	// Check if the user is authorized to add admins
+	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+		return
+	}
+
     var (
         query string
         rows  *sql.Rows
-        err   error
+        err1   error
     )
 
     // Check if the batch filter is provided
     if batch != "" {
         query = "SELECT schedule_id, title, description, start_time, end_time, created_by, batch FROM schedule WHERE batch = $1 ORDER BY start_time"
-        rows, err = db.Query(query, batch)
+        rows, err1 = db.Query(query, batch)
     } else {
         query = "SELECT schedule_id, title, description, start_time, end_time, created_by, batch FROM schedule ORDER BY start_time"
-        rows, err = db.Query(query)
+        rows, err1 = db.Query(query)
     }
 
-    if err != nil {
+    if err1 != nil {
         http.Error(w, "Error fetching events", http.StatusInternalServerError)
-        log.Printf("Error executing query: %v", err)
+        log.Printf("Error executing query: %v", err1)
         return
     }
     defer rows.Close()
@@ -208,9 +236,9 @@ func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     var events []models.Schedule
     for rows.Next() {
         var event models.Schedule
-        if err := rows.Scan(&event.ScheduleID, &event.Title, &event.Description, &event.StartTime, &event.EndTime, &event.CreatedBy, &event.Batch); err != nil {
+        if err1 := rows.Scan(&event.ScheduleID, &event.Title, &event.Description, &event.StartTime, &event.EndTime, &event.CreatedBy, &event.Batch); err1 != nil {
             http.Error(w, "Error processing events", http.StatusInternalServerError)
-            log.Printf("Error scanning row: %v", err)
+            log.Printf("Error scanning row: %v", err1)
             return
         }
         events = append(events, event)
@@ -226,7 +254,7 @@ func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     json.NewEncoder(w).Encode(events)
 }
 
-func GetStudentEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func GetStudentEvents(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
     batch := r.URL.Query().Get("batch")
     if batch == "" {
         http.Error(w, "Batch is required", http.StatusBadRequest)

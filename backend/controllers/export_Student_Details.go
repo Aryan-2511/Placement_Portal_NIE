@@ -11,7 +11,7 @@ import (
 
 )
 
-func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	userRole := r.Header.Get("Role")
 	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized: Only admins or placement coordinators can add opportunities", http.StatusUnauthorized)

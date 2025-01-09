@@ -26,4 +26,5 @@ type User struct {
 	Role                string  `json:"role"`
 	IsPlaced            string  `json:"isPlaced"`
 	Resume_link         string  `json:"resume_link"`
+	IsVerified        	bool	`json:"is_verified"`
 }

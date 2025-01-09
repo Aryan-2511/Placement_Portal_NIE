@@ -6,7 +6,7 @@ import(
 	"net/http"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	var request struct {
 		Email string `json:"email"`
 	}

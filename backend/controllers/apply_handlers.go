@@ -12,7 +12,7 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -186,7 +186,7 @@ func CreateApplicationsTable(db *sql.DB){
 	}
 }
 
-func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
 	
 	// Extract the student USN from query parameters
 	studentUSN := r.URL.Query().Get("usn")
