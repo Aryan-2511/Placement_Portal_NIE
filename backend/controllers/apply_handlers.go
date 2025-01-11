@@ -7,14 +7,38 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "STUDENT" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -23,7 +47,7 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey st
 		StudentUSN    string `json:"student_usn"`
 		OpportunityID string `json:"opportunity_id"`
 	}
-	err := json.NewDecoder(r.Body).Decode(&request)
+	err = json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
@@ -186,8 +210,34 @@ func CreateApplicationsTable(db *sql.DB){
 	}
 }
 
-func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
-	
+func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "STUDENT" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
 	// Extract the student USN from query parameters
 	studentUSN := r.URL.Query().Get("usn")
 	if studentUSN == "" {

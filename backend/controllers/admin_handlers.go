@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"net/http"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
@@ -24,18 +25,35 @@ func GenerateAdminID(role string, serial int) string {
 	return fmt.Sprintf("AD%s%s", roleCode[role], serialStr)
 }
 
-func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB,secretKey string){
+func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPost{
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN"{
-		http.Error(w,"Unauthorized: Only admins can add new admins",http.StatusUnauthorized)
-		return 
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
 	var admin models.Admin
 	if err := json.NewDecoder(r.Body).Decode(&admin); err!=nil{
 		http.Error(w,"Invalid request payload",http.StatusBadRequest)
@@ -97,15 +115,33 @@ func CreateAdminsTable(db *sql.DB) {
 		log.Println("Admins table ensured to exist.")
 	}
 }
-func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" {
-		http.Error(w, "Unauthorized: Only admins can edit admin details", http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -125,7 +161,7 @@ func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey strin
 			SET name = $1 , contact = $2
 			WHERE email = $3
 	`
-	_,err := db.Exec(query,
+	_,err = db.Exec(query,
 		admin.Name,
 		admin.Contact,
 		admin.Email,

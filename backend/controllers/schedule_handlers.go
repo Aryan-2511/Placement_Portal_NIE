@@ -6,24 +6,36 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+    "strings"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodPost {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+    authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -92,23 +104,34 @@ func CreateScheduleTable(db *sql.DB) {
 		log.Println("Schedule table ensured to exist.")
 	}
 }
-func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodDelete {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+    authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
     // Extract schedule ID from the request
     scheduleID := r.URL.Query().Get("schedule_id")
     if scheduleID == "" {
@@ -133,23 +156,34 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey st
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("Event deleted successfully"))
 }
-func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodPut {
         http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
         return
     }
-    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+    authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
     // Extract schedule ID from the request
     scheduleID := r.URL.Query().Get("schedule_id")
     if scheduleID == "" {
@@ -196,18 +230,34 @@ func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey stri
     w.WriteHeader(http.StatusOK)
     w.Write([]byte("Event updated successfully"))
 }
-func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
     // Extract the optional "batch" filter from query parameters
     batch := r.URL.Query().Get("batch")
-    userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+    authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!="STUDENT"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -254,7 +304,34 @@ func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey s
     json.NewEncoder(w).Encode(events)
 }
 
-func GetStudentEvents(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func GetStudentEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
+    authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!="STUDENT"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
     batch := r.URL.Query().Get("batch")
     if batch == "" {
         http.Error(w, "Batch is required", http.StatusBadRequest)

@@ -1,13 +1,14 @@
 package utils
-import(
+
+import (
 	"fmt"
 	"net/http"
 	"strings"
-	"github.com/golang-jwt/jwt/v4"
-	
 
+	"github.com/golang-jwt/jwt/v4"
 )
-func ExtractRoleFromToken(r *http.Request, secretKey string) (string, error) {
+
+func ExtractRoleFromToken(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		return "", fmt.Errorf("missing authorization header")
@@ -25,7 +26,7 @@ func ExtractRoleFromToken(r *http.Request, secretKey string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(secretKey), nil
+		return (jwtSecret), nil
 	})
 	if err != nil {
 		return "", fmt.Errorf("error parsing token: %v", err)

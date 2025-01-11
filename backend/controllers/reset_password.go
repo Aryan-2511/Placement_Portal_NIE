@@ -5,7 +5,7 @@ import(
 	"database/sql"
 	"net/http"
 )
-func ResetPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	var request struct {
 		Token       string `json:"token"`
 		NewPassword string `json:"new_password"`

@@ -6,30 +6,42 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN"{
-		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+	if claims["role"] != "ADMIN"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 	
 	var coordinator models.PlacementCoordinator
 	if err := json.NewDecoder(r.Body).Decode(&coordinator); err!=nil{
@@ -128,21 +140,33 @@ func CreatePlacementCoordinatorsTable(db *sql.DB) {
 	}
 }
 
-func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -188,23 +212,34 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.
 	json.NewEncoder(w).Encode(coordinators)
 }
 
-func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN"{
-		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+	if claims["role"] != "ADMIN"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 
 	usn := r.URL.Query().Get("usn")
 	if usn == ""{
@@ -265,21 +300,33 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.D
 	w.Write([]byte("Placement coordinator deleted successfully"))
 }
 // EditPlacementCoordinator updates the details of a placement coordinator
-func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" {
-		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
