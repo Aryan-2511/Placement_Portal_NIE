@@ -8,15 +8,41 @@ import (
 	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
+	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "STUDENT" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
+
 	// Extract USN from the request
 	usn := r.URL.Query().Get("usn")
 	if usn == "" {
 		http.Error(w, "USN is required", http.StatusBadRequest)
 		return
 	}
+
 
 	// Query to fetch student details based on USN
 	query := `
@@ -29,7 +55,7 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 	`
 
 	var student models.User
-	err := db.QueryRow(query, usn).Scan(
+	err = db.QueryRow(query, usn).Scan(
 		&student.Name, &student.USN, &student.DOB, &student.College_Email,
 		&student.Personal_Email, &student.Branch, &student.Batch, &student.Address,
 		&student.Contact, &student.Gender, &student.Category, &student.Aadhar,
@@ -58,11 +84,39 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 	}
 }
 
-func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if r.Method != http.MethodPost {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
+    authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "STUDENT"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
+
 
 	// Extract USN from the request query parameters
 	usn := r.URL.Query().Get("usn")
@@ -138,7 +192,7 @@ func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.D
 	args = append(args, usn)
 
 	// Execute the update query
-	_, err := db.Exec(query, args...)
+	_, err = db.Exec(query, args...)
 	if err != nil {
 		log.Printf("Error updating student details: %v", err)
 		http.Error(w, "Error updating student details", http.StatusInternalServerError)

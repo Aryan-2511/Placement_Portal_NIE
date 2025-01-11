@@ -3,28 +3,40 @@ package controllers
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"net/http"
 	"database/sql"
 	"strconv"
-	"fmt"
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -59,20 +71,32 @@ func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request,db *sql.DB,secr
 
 
 }
-func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -105,19 +129,32 @@ func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request,db *sql.DB,sec
 	json.NewEncoder(w).Encode(students)
 
 }
-func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodGet{
 		http.Error(w, "Invalid request method",http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -173,36 +210,48 @@ func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request,db *sql.DB,secretK
 	json.NewEncoder(w).Encode(students)
 
 }
-func FilterPlacedHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func FilterPlacedHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodGet{
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
 
 	if branch := r.URL.Query().Get("branch");branch!=""{
-		FilterPlacedByBranch(w,r,db,secretKey)
+		FilterPlacedByBranch(w,r,db)
 		return
 	} 
 
 	if company := r.URL.Query().Get("company");company!=""{
-		FilterPlacedByCompany(w,r,db,secretKey)
+		FilterPlacedByCompany(w,r,db)
 		return
 	}
 	 
 	if r.URL.Query().Has("min_ctc")||r.URL.Query().Has("max_ctc") {
-		FilterPlacedByCTC(w,r,db,secretKey)
+		FilterPlacedByCTC(w,r,db)
 		return
 	}
 	http.Error(w, "Invalid or missing filter parameters", http.StatusBadRequest)

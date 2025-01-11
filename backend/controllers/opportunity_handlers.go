@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
@@ -27,7 +28,7 @@ func GenerateOpportunityID(batch string, serial int) string {
 }
 
 
-func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB, secretKey string) {
+func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	// log.Printf("Request Method: %s", r.Method)
 	// log.Printf("Request Headers: %+v", r.Header)
 	if r.Method != http.MethodPost {
@@ -35,18 +36,29 @@ func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB, secretKey
 		return
 	}
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" {
-		http.Error(w, "Unauthorized: Only admins can add new admins", http.StatusUnauthorized)
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 	var opportunity models.Opportunity
 	if err := json.NewDecoder(r.Body).Decode(&opportunity); err != nil {
 		log.Printf("Error decoding request body: %v", err)
@@ -131,7 +143,7 @@ func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB, secretKey
 		opportunity.JobDescription,
 		attachedDocumentsJSON,
 		opportunity.OpportunityType,
-		userRole,
+		claims["role"],
 		opportunity.Class_10_Percentage_Criteria,
 		opportunity.Class_12_Percentage_Criteria,
 	)
@@ -183,21 +195,33 @@ func CreateOpportunitiesTable(db *sql.DB) {
 	}
 }
 
-func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -285,7 +309,7 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey
 		opportunity.JobDescription,
 		attachedDocumentsJSON,
 		opportunity.OpportunityType,
-		userRole,
+		claims["role"],
 		opportunity.Class_10_Percentage_Criteria,
 		opportunity.Class_12_Percentage_Criteria,
 		opporID,
@@ -301,21 +325,33 @@ func EditOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey
 }
 
 
-func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -346,7 +382,7 @@ func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB,secretK
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Opportunity deleted successfully"))
 }
-func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	type RequestPayload struct {
 		OpportunityID string `json:"opportunity_id"`
 		Completed     string `json:"completed"` // "YES" or "NO"
@@ -363,15 +399,27 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 		http.Error(w, "Invalid value for completed field. Use 'YES' or 'NO'.", http.StatusBadRequest)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -442,7 +490,7 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
-func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
+func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	
 	type StatusUpdateResponse struct {
 		UpdatedOpportunities int    `json:"updated_opportunities"`
@@ -453,15 +501,27 @@ func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *s
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -499,18 +559,31 @@ func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *s
 }
 
 
-func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string) {
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!="STUDENT"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
-		return
-	}
 
 	// Get the Opportunity ID from the request
 	opportunityID := r.URL.Query().Get("id")
@@ -580,17 +653,29 @@ func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql
 	json.NewEncoder(w).Encode(opportunity)
 }
 
-func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!= "STUDENT"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 

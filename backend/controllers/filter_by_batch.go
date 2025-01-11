@@ -5,14 +5,40 @@ import (
 	"log"
 	"net/http"
 	"database/sql"
+	"strings"
 	"Github.com/Aryan-2511/Placement_NIE/models"
+	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func FilterByBatch(w http.ResponseWriter,r *http.Request,db *sql.DB,secretKey string){
+func FilterByBatch(w http.ResponseWriter,r *http.Request,db *sql.DB){
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
 	}
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
+	
 
 	batch := r.URL.Query().Get("batch")
 	if batch == ""{

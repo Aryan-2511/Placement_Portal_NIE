@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 func CheckPasswordHash(password, hash string) error {
-	log.Printf("Checking password: '%s' against hash: '%s'", password, hash)
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
     if err != nil {
         fmt.Println("Password does not match!")
@@ -45,40 +44,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		query          string
 	)
 
-	// // Define role-specific structs
-	// type Student struct {
-	// 	Name              string
-	// 	USN               string
-	// 	DOB               string
-	// 	CollegeEmail      string
-	// 	PersonalEmail     string
-	// 	Branch            string
-	// 	Batch             string
-	// 	Address           string
-	// 	Contact           string
-	// 	Gender            string
-	// 	Category          string
-	// 	Aadhar            string
-	// 	PAN               string
-	// 	Class10Percentage float64
-	// 	Class10Year       int
-	// 	Class10Board      string
-	// 	Class12Percentage float64
-	// 	Class12Year       int
-	// 	Class12Board      string
-	// 	CurrentCGPA       float64
-	// 	Backlogs          int
-	// 	IsVerified        bool
-	// 	ResumeLink        string
-	// }
-
-	// type Admin struct {
-	// 	ID      int
-	// 	Name    string
-	// 	Email   string
-	// 	Contact string
-	// }
-
+	
 	// Role-based query selection
 	switch loginRequest.Role {
 	case "ADMIN":

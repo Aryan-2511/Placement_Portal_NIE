@@ -5,14 +5,35 @@ import (
 	"log"
 	"net/http"
 	"database/sql"
+	"strings"
 	"Github.com/Aryan-2511/Placement_NIE/models"
+	"Github.com/Aryan-2511/Placement_NIE/utils"
+
 )
 
-func GetPlacedStudents(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func GetPlacedStudents(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	
-	userRole := r.Header.Get("Role")
-	if userRole != "ADMIN" && userRole != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins or placement coordinators can edit opportunities", http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
+
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 	query := `SELECT id,usn,name,email,branch,batch,company,package,placement_date,contact,placement_type FROM placed_students`

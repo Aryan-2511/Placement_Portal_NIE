@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
@@ -20,21 +21,32 @@ func GeneratePlacementID(batch string, serial int) string {
 	// Return formatted Placement-ID
 	return fmt.Sprintf("PL%s%s", batchCode, serialStr)
 }
-func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
-
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -144,21 +156,33 @@ func CreatePlacedStudentsTable(db *sql.DB) {
 		log.Println("Table `placed_students` created or already exists.")
 	}
 }
-func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB,secretKey string) {
+func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
 	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		return
+	}
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
@@ -203,24 +227,34 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB,secr
 	w.Write([]byte("Placed student deleted successfully"))
 }
 
-func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB,secretKey string){
+func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+		return
+	}
+	parts := strings.Split(authHeader, " ")
+	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+		return
+	}
+	tokenString := parts[1]
 
-	userRole, err := utils.ExtractRoleFromToken(r, secretKey)
+	// Validate the token
+	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Unauthorized: %v", err), http.StatusUnauthorized)
+		log.Print(err)
+		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-
-	// Check if the user is authorized to add admins
-	if userRole != "ADMIN" && userRole!="PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized: Only admins and PCs can add new admins", http.StatusUnauthorized)
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 
 	var placed_student models.PlacedStudent
 	if err := json.NewDecoder(r.Body).Decode(&placed_student); err != nil {
