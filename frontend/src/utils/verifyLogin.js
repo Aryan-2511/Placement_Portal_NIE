@@ -12,13 +12,13 @@ export const verifyLogin = (email, password) => {
   }
 
   // Validate password
-  if (!passwordRegex.test(password)) {
-    return {
-      valid: false,
-      error:
-        'Password must be at least 8 characters long, with at least one uppercase letter and one number.',
-    };
-  }
+  // if (!passwordRegex.test(password)) {
+  //   return {
+  //     valid: false,
+  //     error:
+  //       'Password must be at least 8 characters long, with at least one uppercase letter and one number.',
+  //   };
+  // }
 
   // If both are valid
   return { valid: true };

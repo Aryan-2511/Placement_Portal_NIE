@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-
 function Application({ application }) {
   const navigate = useNavigate();
   return (
@@ -7,15 +6,12 @@ function Application({ application }) {
       onClick={() =>
         navigate(`/student/opportunities/${application.opportunity_id}`)
       }
-      className="grid grid-cols-[1.2fr_1.2fr_1.8fr_0.6fr] gap-[1.2rem] items-center px-[2rem] py-[1.2rem] border-b-[.1rem] cursor-pointer hover:bg-slate-50"
+      className="grid grid-cols-[0.8fr_1.6fr_1.4fr_0.6fr] gap-[1.2rem] items-center px-[2rem] py-[1.2rem] border-b-[.1rem] cursor-pointer hover:bg-slate-50"
     >
-      <p>{application.student_name}</p>
-      <p className="text-[1.4rem]">{application.opportunity_id}</p>
+      <p>{application.opportunity_id}</p>
+      <p className="text-[1.4rem]">{application.job_post}</p>
       <div>
-        <p className="font-semibold text-[var(--color-grey-600)]">
-          {application.job_post}
-        </p>
-        <p className="text-[1.4rem] text-[var(--color-grey-100)]">
+        <p className="text-[1.4rem] text-[var(--color-grey-600)]">
           {application.company}
         </p>
       </div>

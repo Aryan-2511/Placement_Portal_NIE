@@ -9,8 +9,13 @@ import {
   SelectValue,
 } from '../ui/select';
 import HrBreak from '../ui/HrBreak';
+// import { getStudentDetails } from '@/services/apiAuth';
 
 function ProfileDetails() {
+  // getStudentDetails('4NI21IS010')
+  //   .then((res) => console.log(res))
+  //   .catch((err) => console.error(err));
+
   const [isEditable, setIsEditable] = useState(false);
 
   return (

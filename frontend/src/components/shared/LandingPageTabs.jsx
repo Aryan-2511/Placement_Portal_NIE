@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import OurRecruiters from './OurRecruiters';
 import PlacementStats from './PlacementStats';
 import OurTeam from './OurTeam';
-import Login from './Login';
+import Login from '../../features/authentication/Login';
 
 function LandingPageTabs() {
   return (

@@ -1,7 +1,10 @@
 import ProfileDetails from '@/components/shared/ProfileDetails';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
 
 function Profile() {
+  const { data: user } = useQuery(['user'], { initialData: null });
+  console.log(user);
   return (
     <div className="min-w-[102.4rem]">
       <h3>Profile details</h3>

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { Input } from '../ui/input';
+import { Input } from '../../components/ui/input';
 import {
   Card,
   CardContent,
@@ -10,20 +10,20 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '../ui/card';
-import { Label } from '../ui/label';
-import { Button } from '../ui/button';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+} from '../../components/ui/card';
+import { Label } from '../../components/ui/label';
+import { Button } from '../../components/ui/button';
+import { RadioGroup, RadioGroupItem } from '../../components/ui/radio-group';
 import { verifyLogin } from '@/utils/verifyLogin';
-import { useNavigate } from 'react-router-dom';
+import useLogin from './useLogin';
+import Spinner from '@/components/shared/Spinner';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+  const { login, isLoading } = useLogin();
   const [error, setError] = useState('');
-
-  const navigate = useNavigate();
 
   function handleSubmit() {
     const result = verifyLogin(email, password);
@@ -31,15 +31,21 @@ function Login() {
       setError(result.error);
       toast.error(result.error);
     } else {
-      setError('');
-      // Proceed with login (e.g., API call)
-      toast.success('Login successful');
-      setEmail('');
-      setPassword('');
-      setRole('student');
-      navigate('/student/dashboard');
+      login(
+        { email, password, role },
+        {
+          onSettled: () => {
+            setError('');
+            setEmail('');
+            setPassword('');
+            setRole('STUDENT');
+          },
+        }
+      );
     }
   }
+
+  if (isLoading) return <Spinner />;
 
   return (
     <Card className="px-[2.4rem] py-[1.2rem] text-[var(--color-grey-600)]">
@@ -57,6 +63,7 @@ function Login() {
           </Label>
           <Input
             id="email"
+            type="email"
             placeholder="johndoe@email.com"
             onChange={(e) => setEmail(e.target.value)}
             value={email}
@@ -66,6 +73,7 @@ function Login() {
           <Label htmlFor="password">Password</Label>
           <Input
             id="password"
+            type="password"
             placeholder="password@1234"
             onChange={(e) => setPassword(e.target.value)}
             value={password}
@@ -78,15 +86,15 @@ function Login() {
           onValueChange={(value) => setRole(value)}
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="student" id="student" />
+            <RadioGroupItem value="STUDENT" id="student" />
             <Label htmlFor="student">Student</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="coordinator" id="coordinator" />
+            <RadioGroupItem value="COORDINATOR" id="coordinator" />
             <Label htmlFor="coordinator">Coordinator</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="admin" id="admin" />
+            <RadioGroupItem value="ADMIN" id="admin" />
             <Label htmlFor="admin">Admin</Label>
           </div>
         </RadioGroup>
