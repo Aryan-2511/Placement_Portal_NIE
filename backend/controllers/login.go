@@ -74,14 +74,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		var admin models.Admin
 		err := db.QueryRow(query, loginRequest.Email).Scan(&hashedPassword, &admin.ID, &admin.Name, &admin.Email, &admin.Contact)
 		if err == sql.ErrNoRows {
+			log.Print("No data found for email:", loginRequest.Email)
 			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		} else if err != nil {
-			log.Printf("Database error: %v", err)
+			log.Printf("Database error: %v for email: %s", err, loginRequest.Email)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
-
 		// Populate userDetails
 		userDetails["id"] = admin.ID
 		userDetails["name"] = admin.Name
