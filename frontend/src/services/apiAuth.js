@@ -1,18 +1,25 @@
+import { clearItem } from '@/utils/localStorageServices';
 import axios from 'axios';
 const API_URL = 'http://127.0.0.1:8080';
 export async function login({ email, password, role }) {
   try {
-    const data = { email, password, role };
-    const response = await axios.post(`${API_URL}/login`, data, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    const loginData = { email, password, role };
+    const response = await axios.post(`${API_URL}/login`, loginData);
 
     return response.data;
   } catch (err) {
     console.error(err);
     throw err;
+  }
+}
+
+export function logout() {
+  try {
+    clearItem('token');
+    clearItem('currentUser');
+  } catch (err) {
+    console.error(err);
+    throw new Error(err);
   }
 }
 

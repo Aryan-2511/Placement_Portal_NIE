@@ -1,9 +1,16 @@
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 const API_URL = 'http://127.0.0.1:8080/opportunities';
 export async function getOpportunitiesByBatch(batch) {
+  const user = Cookies.get('user');
+  if (!user) throw new Error('User not logged in or initialized');
+  const { token } = JSON.parse(user);
   if (!batch) {
     throw new Error('Batch is required');
+  }
+  if (!token) {
+    throw new Error('Unauthorized access not allowed!');
   }
 
   try {
@@ -11,9 +18,9 @@ export async function getOpportunitiesByBatch(batch) {
       params: { batch },
       headers: {
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
     });
-
     return response.data; // Return the list of opportunities
   } catch (error) {
     console.error('Failed to fetch opportunities by batch:', error);
@@ -28,12 +35,19 @@ export async function getOpportunitiesByBatch(batch) {
 }
 
 export async function getOpportunity(id) {
-  if (!id) throw new Error('id is required');
+  const user = Cookies.get('user');
+  if (!user) throw new Error('User not logged in or initialized');
+  const { token } = JSON.parse(user);
+
+  if (!id) throw new Error('Opportunity id is required');
+  if (!token) {
+    throw new Error('Unauthorized access not allowed!');
+  }
   try {
     const response = await axios.get(`${API_URL}/details`, {
       params: { id },
       headers: {
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
     });
     return response.data;
@@ -49,7 +63,9 @@ export async function getOpportunity(id) {
   }
 }
 
-export async function updateCurrentOpportunity(id, updatedOpportunity, role) {
+export async function updateCurrentOpportunity(id, updatedOpportunity) {
+  const { role } = JSON.parse(Cookies.get('user'));
+  if (!role) throw new Error('Unauthorized access not allowed!');
   try {
     const response = await axios.put(`${API_URL}/edit`, updatedOpportunity, {
       headers: {

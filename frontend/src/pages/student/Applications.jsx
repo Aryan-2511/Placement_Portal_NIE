@@ -1,14 +1,11 @@
-import { applications } from '../../../public/dummy-data/application/applicationData';
+import { useApplications } from '@/features/applications/useApplications';
 import ApplicationTable from '../../features/applications/ApplicationTable';
-// import { useState } from 'react';
+import Spinner from '@/components/shared/Spinner';
 
 function Applications() {
-  // const [batch, setBatch] = useState('2025');
-  // const { opportunities, isLoading } = useOpportunities(batch);
+  const { applications, isLoading } = useApplications();
 
-  // below is temporary code just for making the layout
-
-  // if (isLoading) return <Spinner />;
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="min-w-[102.4rem]">

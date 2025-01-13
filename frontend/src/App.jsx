@@ -33,7 +33,8 @@ import OpportunityDetail from './features/opportunities/OpportunityDetail';
 import { DarkModeProvider } from './context/DarkModeContext';
 import { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { UserRoleProvider } from './context/UserRoleContext';
+// import { UserRoleProvider } from './context/UserContext';
+import Logout from './features/authentication/Logout';
 
 const router = createBrowserRouter([
   {
@@ -69,6 +70,7 @@ const router = createBrowserRouter([
               { path: 'profile', element: <Profile /> },
               { path: 'feedback', element: <Feedback /> },
               { path: 'faq', element: <FAQ /> },
+              { path: 'logout', element: <Logout /> },
             ],
           },
           {
@@ -107,39 +109,39 @@ const App = () => {
   return (
     <>
       <DarkModeProvider>
-        <UserRoleProvider role={'STUDENT'}>
-          <QueryClientProvider client={queryClient}>
-            <GlobalStyles />
-            <Toaster
-              position="top-center"
-              reverseOrder={false}
-              gutter={8}
-              containerClassName=""
-              containerStyle={{ margin: '8px' }}
-              toastOptions={{
-                // Define default options
-                className: '',
-                duration: 5000,
-                style: {
-                  fontSize: '16px',
-                  maxWidth: '500px',
-                  padding: '16px 24px',
-                  backgroundColor: 'var(--color-grey-0)',
-                  color: 'var(--color-grey-700)',
-                },
+        {/* <UserRoleProvider> */}
+        <QueryClientProvider client={queryClient}>
+          <GlobalStyles />
+          <Toaster
+            position="top-center"
+            reverseOrder={false}
+            gutter={8}
+            containerClassName=""
+            containerStyle={{ margin: '8px' }}
+            toastOptions={{
+              // Define default options
+              className: '',
+              duration: 5000,
+              style: {
+                fontSize: '16px',
+                maxWidth: '500px',
+                padding: '16px 24px',
+                backgroundColor: 'var(--color-grey-0)',
+                color: 'var(--color-grey-700)',
+              },
 
-                // Default options for specific types
-                success: {
-                  duration: 3000,
-                },
-                error: {
-                  duration: 5000,
-                },
-              }}
-            />
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </UserRoleProvider>
+              // Default options for specific types
+              success: {
+                duration: 3000,
+              },
+              error: {
+                duration: 5000,
+              },
+            }}
+          />
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+        {/* </UserRoleProvider> */}
       </DarkModeProvider>
     </>
   );

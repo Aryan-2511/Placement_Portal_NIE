@@ -2,16 +2,21 @@ import axios from 'axios';
 
 const API_URL = 'http://127.0.0.1:8080/applications';
 
-export async function getApplications(usn) {
-  // code
+export async function getApplications(usn, token) {
   try {
+    // const token = getItem('currentUser').token;
+    if (!usn) {
+      throw new Error('USN is required');
+    }
+    if (!token) {
+      throw new Error('Unauthorized access not allowed!');
+    }
     const response = await axios.get(`${API_URL}/student`, {
       params: { usn },
       headers: {
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
     });
-
     return response.data;
   } catch (error) {
     console.error('Failed to fetch applications:', error);

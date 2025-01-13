@@ -8,17 +8,18 @@ import Spinner from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
 import HrBreak from '@/components/ui/HrBreak';
 import useOpportunity from './useOpportunity';
-import { useRole } from '@/context/UserRoleContext';
 import dateFormatter from '@/utils/dateFormatter';
 import useUpdateOpportunity from './useUpdateOpportunity';
 import { fields } from './opportunityFields';
+import { useUser } from '../authentication/useUser';
 
 function OpportunityDetail() {
   const [isEditable, setIsEditable] = useState(false);
   const { opportunity, isLoading } = useOpportunity();
   const { updateOpportunity, isUpdating } = useUpdateOpportunity();
   const [opportunityData, setOpportunityData] = useState({});
-  const { role } = useRole();
+  const user = useUser();
+  const { role } = user;
   const { opportunityId } = useParams();
 
   useEffect(() => {
