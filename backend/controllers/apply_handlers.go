@@ -201,7 +201,7 @@ func CreateApplicationsTable(db *sql.DB){
     	student_name VARCHAR(100) NOT NULL,
     	opportunity_id VARCHAR(20) NOT NULL,
     	applied_at TIMESTAMP NOT NULL,
-    	status VARCHAR(10) DEFAULT 'PROCESSING',
+    	status VARCHAR(10) DEFAULT 'IN-PROCESS',
     	FOREIGN KEY (student_usn) REFERENCES students(usn),
     	FOREIGN KEY (opportunity_id) REFERENCES opportunities(id),
     	CONSTRAINT unique_application UNIQUE (student_usn, opportunity_id)

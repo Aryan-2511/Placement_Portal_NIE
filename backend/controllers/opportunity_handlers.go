@@ -189,7 +189,8 @@ func CreateOpportunitiesTable(db *sql.DB) {
 		class_10_percentage_criteria NUMERIC(5, 2) DEFAULT 50,
 		class_12_percentage_criteria NUMERIC(5, 2) DEFAULT 50,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
-		completed VARCHAR(10) DEFAULT 'NO'
+		completed VARCHAR(10) DEFAULT 'NO',
+		created_at TIMESTAMP DEFAULT NOW() 
 	);
 	`
 
@@ -469,7 +470,7 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 		_, err := tx.Exec(updateApplicationsQuery, payload.OpportunityID)
 		if err != nil {
 			tx.Rollback()
-			http.Error(w, "Failed to update application statuses", http.StatusInternalServerError)
+			http.Error(w, "Failed to update application statuss", http.StatusInternalServerError)
 			log.Print(err)
 			return
 		}
