@@ -66,11 +66,18 @@ func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
 		return
 	}
 	tableName := "admins"
-	if utils.CheckTableExists(db, tableName) {
+
+	exists, err := utils.CheckTableExists(db, tableName)
+	if err != nil {
+		log.Printf("Error checking table existence: %v", err)
+		return
+	}
+
+	if exists {
 		fmt.Printf("Table '%s' exists.\n", tableName)
 	} else {
 		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateAdminsTable(db)
+		CreateApplicationsTable(db)
 	}
 	var serial int
 	query := `SELECT COUNT(*) + 1 FROM admins`

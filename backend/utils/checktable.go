@@ -2,16 +2,16 @@ package utils
 
 import (
 	"database/sql"
-	"log"
+	"fmt"
 )
 
-func CheckTableExists(db *sql.DB, tableName string) bool {
+func CheckTableExists(db *sql.DB, tableName string) (bool, error) {
 	query := `
 		SELECT EXISTS (
 			SELECT 1
 			FROM information_schema.tables 
 			WHERE table_schema = 'public'
-			AND table_catalog = 'postgres'
+			AND table_catalog = current_database() -- Uses current database dynamically
 			AND table_name = $1
 		);
 	`
@@ -19,8 +19,8 @@ func CheckTableExists(db *sql.DB, tableName string) bool {
 	var exists bool
 	err := db.QueryRow(query, tableName).Scan(&exists)
 	if err != nil {
-		log.Fatalf("Error checking table existence: %v", err)
+		return false, fmt.Errorf("error checking table existence: %v", err)
 	}
 
-	return exists
+	return exists, nil
 }

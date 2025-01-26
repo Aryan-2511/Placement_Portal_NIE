@@ -55,18 +55,32 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		return
 	}
 	tableName := "admins"
-	if utils.CheckTableExists(db, tableName) {
+
+	exists, err := utils.CheckTableExists(db, tableName)
+	if err != nil {
+		log.Printf("Error checking table existence: %v", err)
+		return
+	}
+
+	if exists {
 		fmt.Printf("Table '%s' exists.\n", tableName)
 	} else {
 		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateAdminsTable(db)
+		CreateApplicationsTable(db)
 	}
 	tableName2 := "placement_coordinators"
-	if utils.CheckTableExists(db, tableName2) {
+
+	exists, err = utils.CheckTableExists(db, tableName2)
+	if err != nil {
+		log.Printf("Error checking table existence: %v", err)
+		return
+	}
+
+	if exists {
 		fmt.Printf("Table '%s' exists.\n", tableName2)
 	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName2)
-		CreatePlacementCoordinatorsTable(db)
+		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
+		CreateApplicationsTable(db)
 	}
 
 	tx, err := db.Begin()
