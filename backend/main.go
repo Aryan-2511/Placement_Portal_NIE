@@ -76,6 +76,10 @@ func main() {
 	http.Handle("/schedule/delete",withDatabaseAndAuth(db,controllers.DeleteEvent))												// Route for deleting an event 
 	http.Handle("/schedule/all",withDatabaseAndAuth(db,controllers.GetAllEvents))									// Route for getting all the events
 	http.Handle("/schedule/student",withDatabaseAndAuth(db,controllers.GetStudentEvents))										// Route for getting events of a student
+	http.Handle("/student-dash/active-opportunities",withDatabaseAndAuth(db,controllers.GetActiveOpportunitiesCount))										// Route for getting events of a student
+	http.Handle("/student-dash/recent-opportunities",withDatabaseAndAuth(db,controllers.GetRecentOpportunities))										// Route for getting events of a student
+	http.Handle("/student-dash/total-placed-students",withDatabaseAndAuth(db,controllers.GetPlacedStudentsCount))										// Route for getting events of a student
+	http.Handle("/student-dash/total-applications",withDatabaseAndAuth(db,controllers.GetTotalApplicationsByStudent))										// Route for getting events of a student
 
 
 	// http.Handle("/protected", controllers.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

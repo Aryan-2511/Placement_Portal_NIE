@@ -189,7 +189,8 @@ func CreateOpportunitiesTable(db *sql.DB) {
 		class_10_percentage_criteria NUMERIC(5, 2) DEFAULT 50,
 		class_12_percentage_criteria NUMERIC(5, 2) DEFAULT 50,
 		status VARCHAR(20) DEFAULT 'ACTIVE',
-		completed VARCHAR(10) DEFAULT 'NO'
+		completed VARCHAR(10) DEFAULT 'NO',
+		created_at TIMESTAMP DEFAULT NOW() 
 	);
 	`
 

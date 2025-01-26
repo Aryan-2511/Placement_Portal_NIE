@@ -46,4 +46,5 @@ type Opportunity struct {
 	Class_12_Percentage_Criteria 	float64   `json:"class_12_percentage_criteria"`
 	Status 							string 	  `json:"status"`
 	Completed 						string    `json:"completed"`
+	CreatedAt						time.Time `json:"created_at"`
 }
