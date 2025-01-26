@@ -3,11 +3,10 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
@@ -51,6 +50,18 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	if err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
+	}
+	tableName := "applications"
+	exists, err := utils.CheckTableExists(db, tableName)
+	if err != nil {
+		log.Printf("Error checking table existence: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if !exists {
+		log.Printf("Table '%s' does not exist. Creating table...", tableName)
+		CreateApplicationsTable(db) // Ensure this function is correctly implemented
 	}
 
 	// Check if the student has already applied for the same opportunity
@@ -163,20 +174,7 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		AppliedAt:     time.Now(),
 	}
 	
-	tableName := "applications"
-
-	exists, err := utils.CheckTableExists(db, tableName)
-	if err != nil {
-		log.Printf("Error checking table existence: %v", err)
-		return
-	}
-
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
-	}
+	
 
 	// Insert application into the database
 	applyQuery := `INSERT INTO applications (student_usn, student_name, opportunity_id, applied_at) 

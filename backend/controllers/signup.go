@@ -51,18 +51,16 @@ func SignupHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 
 	// Insert into database
 	tableName := "students"
-
 	exists, err := utils.CheckTableExists(db, tableName)
 	if err != nil {
 		log.Printf("Error checking table existence: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
+	if !exists {
+		log.Printf("Table '%s' does not exist. Creating table...", tableName)
+		CreateStudentsTable(db) // Ensure this function is correctly implemented
 	}
 	query := `
 		INSERT INTO students (
