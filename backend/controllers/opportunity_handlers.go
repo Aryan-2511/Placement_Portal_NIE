@@ -95,19 +95,18 @@ func AddOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		return
 	}
 
+	// Insert into database
 	tableName := "opportunities"
-
 	exists, err := utils.CheckTableExists(db, tableName)
 	if err != nil {
 		log.Printf("Error checking table existence: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
+	if !exists {
+		log.Printf("Table '%s' does not exist. Creating table...", tableName)
+		CreateOpportunitiesTable(db) // Ensure this function is correctly implemented
 	}
 
 	var serial int

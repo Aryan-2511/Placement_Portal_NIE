@@ -3,23 +3,24 @@ package utils
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 func CheckTableExists(db *sql.DB, tableName string) (bool, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT EXISTS (
 			SELECT 1
 			FROM information_schema.tables 
 			WHERE table_schema = 'public'
-			AND table_catalog = current_database() -- Uses current database dynamically
-			AND table_name = $1
+			AND table_name = '%s'
 		);
-	`
+	`, tableName)
 
 	var exists bool
-	err := db.QueryRow(query, tableName).Scan(&exists)
+	err := db.QueryRow(query).Scan(&exists)
 	if err != nil {
-		return false, fmt.Errorf("error checking table existence: %v", err)
+		log.Printf("Error checking table existence: %v", err)
+		return false, err
 	}
 
 	return exists, nil

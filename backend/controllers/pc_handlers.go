@@ -3,7 +3,6 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -54,33 +53,31 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-	tableName := "admins"
-
+	// Insert into database
+	tableName := "students"
 	exists, err := utils.CheckTableExists(db, tableName)
 	if err != nil {
 		log.Printf("Error checking table existence: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
+	if !exists {
+		log.Printf("Table '%s' does not exist. Creating table...", tableName)
+		CreateAdminsTable(db) // Ensure this function is correctly implemented
 	}
+	// Insert into database
 	tableName2 := "placement_coordinators"
-
 	exists, err = utils.CheckTableExists(db, tableName2)
 	if err != nil {
 		log.Printf("Error checking table existence: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName2)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
+	if !exists {
+		log.Printf("Table '%s' does not exist. Creating table...", tableName2)
+		CreatePlacementCoordinatorsTable(db) // Ensure this function is correctly implemented
 	}
 
 	tx, err := db.Begin()
