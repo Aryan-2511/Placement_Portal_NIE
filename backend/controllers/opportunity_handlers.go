@@ -470,7 +470,7 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 		_, err := tx.Exec(updateApplicationsQuery, payload.OpportunityID)
 		if err != nil {
 			tx.Rollback()
-			http.Error(w, "Failed to update application statuses", http.StatusInternalServerError)
+			http.Error(w, "Failed to update application statuss", http.StatusInternalServerError)
 			log.Print(err)
 			return
 		}
