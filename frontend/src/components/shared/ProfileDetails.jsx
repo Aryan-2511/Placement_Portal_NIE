@@ -15,7 +15,6 @@ import dateFormatter from '@/utils/dateFormatter';
 function ProfileDetails() {
   const [isEditable, setIsEditable] = useState(false);
   const user = useUser();
-  console.log(user);
   return (
     <form className="p-[3.2rem] bg-[var(--color-grey-0)] shadow-[var(--shadow-lg)]">
       <p className="font-semibold mb-[2.4rem]">Personal details</p>
@@ -71,8 +70,8 @@ function ProfileDetails() {
       </FormRow>
       <FormRow label="Date of Birth" className="">
         <Input
-          type="text"
-          value={dateFormatter(user.dob)}
+          type="date"
+          value={dateFormatter(user.dob, 'date')}
           onChange={() => console.log('profile section')}
           id="dob"
           disabled={!isEditable}

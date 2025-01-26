@@ -1,4 +1,4 @@
-function NumericalStatCard({ path, title, color }) {
+function NumericalStatCard({ path, title, color, data }) {
   return (
     <div className="h-[10.3rem] min-w-[20rem] bg-[var(--color-grey-0)] flex-1 p-3 flex items-center gap-[1.2rem] shadow-sm">
       <div
@@ -11,7 +11,7 @@ function NumericalStatCard({ path, title, color }) {
         <p className="text-[1.2rem] font-semibold text-[var(--color-grey-100)]">
           {title.toUpperCase()}
         </p>
-        <p className="text-[2.4rem] font-semibold">10</p>
+        <p className="text-[2.4rem] font-semibold">{data}</p>
       </div>
     </div>
   );

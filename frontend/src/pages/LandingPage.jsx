@@ -11,7 +11,7 @@ const collegeData = {
 function LandingPage() {
   return (
     <div className="h-screen flex flex-col md:grid md:grid-cols-[2fr_3fr]">
-      <div className="bg-[var(--color-blue-700)] text-[var(--color-grey-0)] bg-[url(public/images/nie.png)] bg-no-repeat bg-cover bg-[center_right_8rem] bg-blend-overlay md:bg-[center_right_32rem]">
+      <div className="bg-[var(--color-blue-700)] text-[var(--color-grey-0)] bg-[url(/public/images/nie.png)] bg-no-repeat bg-cover bg-[center_right_8rem] bg-blend-overlay md:bg-[center_right_32rem]">
         <CollegeAboutSidebar
           collegeName={collegeData.collegeName}
           collegeInfo={collegeData.collegeInfo}

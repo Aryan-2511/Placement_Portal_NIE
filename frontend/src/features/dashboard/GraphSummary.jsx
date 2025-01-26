@@ -1,4 +1,4 @@
-import GraphData from '../../components/shared/GraphData';
+import GraphData from './GraphData';
 
 function GraphSummary() {
   return (

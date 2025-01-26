@@ -6,7 +6,6 @@ import { Input } from '../../components/ui/input';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -26,11 +25,14 @@ function Login() {
   const [error, setError] = useState('');
 
   function handleSubmit() {
-    const result = verifyLogin(email, password);
-    if (!result.valid) {
-      setError(result.error);
-      toast.error(result.error);
-    } else {
+    if (role === 'student') {
+      const result = verifyLogin(email, password);
+      if (!result.valid) {
+        setError(result.error);
+        toast.error(result.error);
+      }
+    }
+    if (!error) {
       login(
         { email, password, role },
         {

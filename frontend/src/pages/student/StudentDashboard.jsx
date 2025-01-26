@@ -1,4 +1,4 @@
-import GraphSummary from '../../components/shared/GraphSummary';
+import GraphSummary from '../../features/dashboard/GraphSummary';
 import NumericalStatsCards from '../../components/shared/NumericalStatsCards';
 import OpportunitiesSummary from '../../components/shared/OpportunitiesSummary';
 

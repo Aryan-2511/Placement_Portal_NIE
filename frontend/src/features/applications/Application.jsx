@@ -17,7 +17,7 @@ function Application({ application }) {
       </div>
       <p
         className={`px-4 py-1 font-semibold text-[1.4rem] text-[var(--color-brand-700)] rounded-xl text-center ${
-          application.status === 'PROCESSING' && 'bg-yellow-200'
+          application.status === 'IN-PROCESS' && 'bg-yellow-200'
         } ${application.status === 'ACTIVE' ? 'bg-green-200' : 'bg-red-200'}`}
       >
         {application.status}

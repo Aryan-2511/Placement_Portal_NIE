@@ -12,11 +12,14 @@ import dateFormatter from '@/utils/dateFormatter';
 import useUpdateOpportunity from './useUpdateOpportunity';
 import { fields } from './opportunityFields';
 import { useUser } from '../authentication/useUser';
+import { useApplyOpportunity } from '../applications/useApplyOpportunity';
+import toast from 'react-hot-toast';
 
 function OpportunityDetail() {
   const [isEditable, setIsEditable] = useState(false);
-  const { opportunity, isLoading } = useOpportunity();
+  const { opportunity, isOpportunityLoading } = useOpportunity();
   const { updateOpportunity, isUpdating } = useUpdateOpportunity();
+  const { apply, isApplicationLoading } = useApplyOpportunity();
   const [opportunityData, setOpportunityData] = useState({});
   const user = useUser();
   const { role } = user;
@@ -35,7 +38,8 @@ function OpportunityDetail() {
   };
 
   const handleApply = () => {
-    // code
+    apply();
+    if (isApplicationLoading) return <p>Loading...</p>;
   };
 
   const handleSubmit = () => {
@@ -80,23 +84,22 @@ function OpportunityDetail() {
     setOpportunityData(opportunity);
   };
 
-  // Define field mappings
-
-  if (isLoading || !opportunityData || isUpdating) return <Spinner />;
+  if (isOpportunityLoading || !opportunityData || isUpdating)
+    return <Spinner />;
 
   return (
     <div>
       <h3>Opportunity #{opportunity.id}</h3>
       <div className="shadow-lg">
         {/* Opportunity Header */}
-        <div className="px-[3.2rem] py-[2.4rem] flex justify-between items-center bg-gradient-to-r from-[var(--color-brand-700)] to-[#6D12AF]">
-          <div>
-            <p className="font-semibold text-[var(--color-grey-0)]">
+        <div className="px-[3.2rem] py-[2.4rem] flex justify-between items-center bg-gradient-to-r from-[var(--color-brand-700)] to-[#6D12AF] text-[var(--color-white)]">
+          <div className="">
+            <p className="text-[var(--color-white)] font-semibold">
               {opportunity.company}
             </p>
-            <p className="text-[var(--color-grey-50)]">{opportunity.title}</p>
+            <p className="text-[var(--color-white)]">{opportunity.title}</p>
           </div>
-          <div className="flex justify-end gap-[6.4rem] text-[var(--color-grey-50)]">
+          <div className="flex justify-end gap-[6.4rem]">
             <div className="flex flex-col items-center">
               <HiMapPin />
               <span>{opportunity.location}</span>
@@ -140,7 +143,7 @@ function OpportunityDetail() {
                       {opportunityData[name]}
                     </Link>
                   ) : name === 'registration_date' ? (
-                    dateFormatter(opportunityData[name])
+                    dateFormatter(opportunityData[name], 'string')
                   ) : (
                     opportunityData[name]
                   )}
@@ -162,7 +165,7 @@ function OpportunityDetail() {
       </div>
 
       {/* Buttons */}
-      <div className="flex gap-[1.2rem] py-[1.2rem]">
+      <div className="flex gap-[1.2rem] py-[1.2rem] justify-end">
         {role === 'STUDENT' && (
           <Button
             disabled={opportunity.status !== 'ACTIVE'}

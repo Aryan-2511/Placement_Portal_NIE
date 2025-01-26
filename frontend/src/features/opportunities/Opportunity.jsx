@@ -15,7 +15,7 @@ function Opportunity({ opportunity }) {
       </div>
       <p className="text-[1.4rem]">{opportunity.ctc}</p>
       <p className="text-[1.4rem]">
-        {dateFormatter(opportunity.registration_date)}
+        {dateFormatter(opportunity.registration_date, 'string')}
       </p>
       <p className="text-[1.4rem] text-center">
         <span

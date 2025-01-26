@@ -64,12 +64,12 @@ export async function getOpportunity(id) {
 }
 
 export async function updateCurrentOpportunity(id, updatedOpportunity) {
-  const { role } = JSON.parse(Cookies.get('user'));
+  const { role, token } = JSON.parse(Cookies.get('user'));
   if (!role) throw new Error('Unauthorized access not allowed!');
   try {
     const response = await axios.put(`${API_URL}/edit`, updatedOpportunity, {
       headers: {
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
         Role: role,
       },
       params: { opportunity_id: id },

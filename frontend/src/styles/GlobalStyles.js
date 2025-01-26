@@ -9,6 +9,8 @@ const GlobalStyles = createGlobalStyle`
     --color-grey-100 : #5E5E5E;
     --color-grey-600 : #3b3b3b;
 
+    --color-white : #f7f7f7;
+
     --color-blue-0 : #E5E5FF;
     --color-blue-100 : #B3DFF8;
     --color-blue-600 : #353587;
@@ -33,8 +35,6 @@ const GlobalStyles = createGlobalStyle`
     --color-grey-50 : #14121F;
     --color-grey-100 : #AAAAAA;
     --color-grey-600 : #d4d4d4;
-
-    --color-white : #fff;
 
     --color-blue-0 : #041524;
     --color-blue-100 : #242466;

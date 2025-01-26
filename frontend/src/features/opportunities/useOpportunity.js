@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 export default function useOpportunity() {
   const { opportunityId } = useParams();
   const {
-    isLoading,
+    isLoading: isOpportunityLoading,
     data: opportunity,
     error,
   } = useQuery({
@@ -15,5 +15,5 @@ export default function useOpportunity() {
     enabled: !!opportunityId,
   });
 
-  return { isLoading, opportunity, error };
+  return { isOpportunityLoading, opportunity, error };
 }
