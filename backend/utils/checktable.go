@@ -1,4 +1,5 @@
 package utils
+
 import (
 	"database/sql"
 	"log"
@@ -10,7 +11,7 @@ func CheckTableExists(db *sql.DB, tableName string) bool {
 			SELECT 1
 			FROM information_schema.tables 
 			WHERE table_schema = 'public'
-			AND table_catalog = 'Placement_Portal'
+			AND table_catalog = 'postgres'
 			AND table_name = $1
 		);
 	`
