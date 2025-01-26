@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-    "strings"
+	"strings"
+
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
@@ -64,11 +65,18 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
     scheduleID := fmt.Sprintf("SCH%s%03d", batchPart, count+1)
 	tableName := "schedule"
-	if utils.CheckTableExists(db, tableName) {
+
+	exists, err := utils.CheckTableExists(db, tableName)
+	if err != nil {
+		log.Printf("Error checking table existence: %v", err)
+		return
+	}
+
+	if exists {
 		fmt.Printf("Table '%s' exists.\n", tableName)
 	} else {
 		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateScheduleTable(db)
+		CreateApplicationsTable(db)
 	}
     query := `
         INSERT INTO schedule (schedule_id, title, description, start_time, end_time, created_by, batch)
