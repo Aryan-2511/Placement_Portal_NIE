@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logout as logoutApi } from '../../services/apiAuth';
 import { useNavigate } from 'react-router-dom';
 import { clearItem } from '@/utils/localStorageServices';
+import Cookies from 'js-cookie';
 
 export function useLogout() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export function useLogout() {
     mutationFn: logoutApi,
     onSuccess: () => {
       clearItem('currentUser');
+      Cookies.remove('user');
       queryClient.removeQueries();
       navigate('/', { replace: true });
     },

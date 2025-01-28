@@ -13,7 +13,7 @@ import useUpdateOpportunity from './useUpdateOpportunity';
 import { fields } from './opportunityFields';
 import { useUser } from '../authentication/useUser';
 import { useApplyOpportunity } from '../applications/useApplyOpportunity';
-import toast from 'react-hot-toast';
+// import toast from 'react-hot-toast';
 
 function OpportunityDetail() {
   const [isEditable, setIsEditable] = useState(false);

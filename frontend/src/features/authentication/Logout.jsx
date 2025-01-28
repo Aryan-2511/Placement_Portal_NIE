@@ -1,13 +1,17 @@
-import { Button } from '@/components/ui/button';
 import { useLogout } from './useLogout';
+import { HiMiniArrowRightStartOnRectangle } from 'react-icons/hi2';
+import Spinner from '@/components/shared/Spinner';
 
 function Logout() {
   const { logout, isLoading } = useLogout();
-  if (isLoading) return <p>Loading...</p>;
   return (
-    <div>
-      <Button onClick={logout}>Logout</Button>
-    </div>
+    <button onClick={logout}>
+      {isLoading ? (
+        <Spinner />
+      ) : (
+        <HiMiniArrowRightStartOnRectangle size={'2.4rem'} />
+      )}
+    </button>
   );
 }
 

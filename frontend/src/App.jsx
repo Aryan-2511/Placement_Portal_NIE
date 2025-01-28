@@ -6,7 +6,7 @@ import {
 import { Toaster } from 'react-hot-toast';
 
 // Layouts
-import MainLayout from './components/layout/MainLayout'; // Unified layout for both student and coordinator
+import MainLayout from './components/layout/MainLayout'; // Unified layout for both student and admin
 import GlobalStyles from './styles/GlobalStyles';
 
 // Student Pages
@@ -17,10 +17,10 @@ import Profile from './pages/student/Profile';
 import Feedback from './pages/student/Feedback';
 import FAQ from './pages/student/FAQ';
 
-// Coordinator Pages
-import CoordinatorDashboard from './pages/coordinator/CoordinatorDashboard';
-import ManageOpportunities from './pages/coordinator/ManageOpportunities';
-import Reports from './pages/coordinator/Reports';
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ManageOpportunities from './pages/admin/ManageOpportunities';
+import StudentDetails from './pages/admin/StudentDetails';
 
 // Shared Pages
 import NotFound from './pages/NotFound';
@@ -33,8 +33,11 @@ import OpportunityDetail from './features/opportunities/OpportunityDetail';
 import { DarkModeProvider } from './context/DarkModeContext';
 import { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
+import Schedule from './pages/admin/Schedule';
+import Announcements from './pages/admin/Announcements';
+import AdminPanel from './pages/admin/AdminPanel';
 // import { UserRoleProvider } from './context/UserContext';
-import Logout from './features/authentication/Logout';
+// import Logout from './features/authentication/Logout';
 
 const router = createBrowserRouter([
   {
@@ -70,23 +73,29 @@ const router = createBrowserRouter([
               { path: 'profile', element: <Profile /> },
               { path: 'feedback', element: <Feedback /> },
               { path: 'faq', element: <FAQ /> },
-              { path: 'logout', element: <Logout /> },
             ],
           },
           {
-            path: 'coordinator',
+            path: 'admin',
             element: (
-              <PrivateRoute role="COORDINATOR">
+              <PrivateRoute role="ADMIN">
                 <MainLayout />
               </PrivateRoute>
             ),
             children: [
-              { path: 'dashboard', element: <CoordinatorDashboard /> },
+              { path: 'dashboard', element: <AdminDashboard /> },
               {
-                path: 'manage-opportunities',
+                path: 'manage_opportunities',
                 element: <ManageOpportunities />,
               },
-              { path: 'reports', element: <Reports /> },
+              {
+                path: 'manage_opportunities/:opportunityId',
+                element: <OpportunityDetail />,
+              },
+              { path: 'student_details', element: <StudentDetails /> },
+              { path: 'schedule', element: <Schedule /> },
+              { path: 'annoucements', element: <Announcements /> },
+              { path: 'admin_panel', element: <AdminPanel /> },
             ],
           },
         ],

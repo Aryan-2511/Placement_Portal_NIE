@@ -15,7 +15,9 @@ export default function useLogin() {
       queryClient.setQueryData(['user'], user);
       Cookies.set('user', JSON.stringify(user), { expires: (20 / 24) * 60 });
       toast.success('Login successful');
-      navigate('student/dashboard', { replace: true });
+      user.role === 'ADMIN'
+        ? navigate('admin/dashboard', { replace: true })
+        : navigate('student/dashboard', { replace: true });
     },
     onError: (err) => {
       console.log('ERROR', err);

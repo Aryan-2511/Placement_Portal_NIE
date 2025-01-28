@@ -37,7 +37,7 @@ function NumericalStatsCards() {
       />
       <NumericalStatCard
         path={'../../../public/icons/dashboard-icons/dart.png'}
-        title={'total placed stundents'}
+        title={'total placed in batch'}
         color={'var(--color-green-100)'}
         data={totalPlacedStudents.placed_students}
       />

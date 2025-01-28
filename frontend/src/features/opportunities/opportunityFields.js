@@ -2,6 +2,7 @@ export const fields = [
   { name: 'company', label: 'Company', type: 'text' },
   { name: 'title', label: 'Title', type: 'text' },
   { name: 'job_description', label: 'Job Description', type: 'textarea' },
+  { name: 'opportunity_type', label: 'Opportunity type', type: 'text' },
   { name: 'additional_info', label: 'Additional Information', type: 'text' },
   { name: 'location', label: 'Location', type: 'text' },
   { name: 'ctc', label: 'CTC', type: 'number' },

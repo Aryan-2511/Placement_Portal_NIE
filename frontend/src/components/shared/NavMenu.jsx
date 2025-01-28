@@ -1,10 +1,6 @@
 import { useDarkMode } from '@/context/DarkModeContext';
-import {
-  HiMiniUser,
-  HiSun,
-  HiMoon,
-  HiMiniArrowRightStartOnRectangle,
-} from 'react-icons/hi2';
+import Logout from '@/features/authentication/Logout';
+import { HiMiniUser, HiSun, HiMoon } from 'react-icons/hi2';
 import { NavLink } from 'react-router-dom';
 
 function NavMenu() {
@@ -23,9 +19,7 @@ function NavMenu() {
         </button>
       </li>
       <li>
-        <NavLink to="/student/logout">
-          <HiMiniArrowRightStartOnRectangle size={'2.4rem'} />
-        </NavLink>
+        <Logout />
       </li>
     </ul>
   );

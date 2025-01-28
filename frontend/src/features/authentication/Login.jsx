@@ -20,7 +20,7 @@ import Spinner from '@/components/shared/Spinner';
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
+  const [role, setRole] = useState('');
   const { login, isLoading } = useLogin();
   const [error, setError] = useState('');
 
@@ -40,7 +40,7 @@ function Login() {
             setError('');
             setEmail('');
             setPassword('');
-            setRole('STUDENT');
+            setRole('');
           },
         }
       );
