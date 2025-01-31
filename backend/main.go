@@ -56,7 +56,7 @@ func main() {
 	http.Handle("/opportunities/edit", withDatabaseAndAuth(db,controllers.EditOpportunity))									// Route for editing an opportunity
 	http.Handle("/opportunities/delete", withDatabaseAndAuth(db,controllers.DeleteOpportunity))							// Route for deleting an opportunity
 	http.Handle("/opportunities/update-status", withDatabaseAndAuth(db,controllers.UpdateOpportunityStatusHandler))			// Route for updating the status of an opportunity
-	http.Handle("/opportunities/update-completion", withDatabaseAndAuth(db,controllers.UpdateOpportunityCompletionStatus))	// Route for updating the completion status of an opportunity
+	// http.Handle("/opportunities/update-completion", withDatabaseAndAuth(db,controllers.UpdateOpportunityCompletionStatus))	// Route for updating the completion status of an opportunity
 	http.Handle("/opportunities/details", withDatabaseAndAuth(db,controllers.GetOpportunityDetailsHandler))				// Route for getting details of an opportunity
 	http.Handle("/opportunities/by-batch", withDatabaseAndAuth(db,controllers.GetOpportunitiesByBatchHandler))	// Route for getting list of opportunities for a batch
 	http.Handle("/admins/add",withDatabaseAndAuth(db,controllers.AddAdmin))										// Route for adding admin

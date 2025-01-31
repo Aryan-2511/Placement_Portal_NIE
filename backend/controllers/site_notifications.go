@@ -1,11 +1,13 @@
 package controllers
-import(
+
+import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
-	"fmt"
+
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 func GenerateNotificationID(batch string, serial int) string {
@@ -30,7 +32,6 @@ func AddNotificationHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) 
 	// Validate the token
 	claims, err := utils.ValidateToken(tokenString)
 	if err != nil {
-		log.Print(err)
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
@@ -38,91 +39,90 @@ func AddNotificationHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) 
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-	tableName := "notifications"
-
-	exists, err := utils.CheckTableExists(db, tableName)
-	if err != nil {
-		log.Printf("Error checking table existence: %v", err)
-		return
-	}
-
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateNotificationsTable(db)
-	}
 
 	// Parse the request payload
 	var payload struct {
-		StudentIDs []string  `json:"student_emails"` // Empty for global notification
-		Title      string `json:"title"`
-		Message    string `json:"message"`
-		Batch      string `json:"batch"`
+		StudentEmails []string `json:"student_emails"` // Empty for global notifications
+		Title         string   `json:"title"`
+		Message       string   `json:"message"`
+		Batch         string   `json:"batch"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
-	
-	var serial int
-	query := `SELECT COUNT(*) + 1 FROM opportunities WHERE batch = $1`
-	err = db.QueryRow(query, payload.Batch).Scan(&serial)
+
+	// Insert the notification into the notifications table
+	query := `
+		INSERT INTO notifications (title, batch, message, created_by)
+		VALUES ($1, $2, $3, $4) RETURNING id
+	`
+	var notificationID int
+	err = db.QueryRow(query, payload.Title, payload.Batch, payload.Message, claims["id"]).Scan(&notificationID)
 	if err != nil {
-		log.Printf("Error fetching serial for Opportunity-ID: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "Failed to create notification", http.StatusInternalServerError)
 		return
 	}
-	
 
-	// Insert notifications into the database
-	query = `
-		INSERT INTO notifications (student_emails, title,batch, message)
-		VALUES ($1, $2, $3,$4)
-	`
-	for _, studentID := range payload.StudentIDs {
-		if _, err := db.Exec(query, studentID, payload.Title, payload.Message); err != nil {
-			log.Printf("Error inserting notification for student %s: %v", studentID, err)
-		}
-	}
-
-	// Broadcast notification (global)
-	if len(payload.StudentIDs) == 0 {
+	// If it's a global notification, map to all students of the batch
+	if len(payload.StudentEmails) == 0 {
 		query = `
-			INSERT INTO notifications (student_id, title, message)
-			SELECT id, $1, $2 FROM students
+			INSERT INTO notification_students (notification_id, student_email)
+			SELECT $1, email FROM students WHERE batch = $2
 		`
-		if _, err := db.Exec(query, payload.Title, payload.Message); err != nil {
-			log.Printf("Error inserting global notifications: %v", err)
-			http.Error(w, "Failed to create notifications", http.StatusInternalServerError)
+		_, err = db.Exec(query, notificationID, payload.Batch)
+		if err != nil {
+			http.Error(w, "Failed to map global notification", http.StatusInternalServerError)
 			return
+		}
+	} else {
+		// Map the notification to specific students
+		for _, email := range payload.StudentEmails {
+			_, err = db.Exec(`
+				INSERT INTO notification_students (notification_id, student_email)
+				VALUES ($1, $2)
+			`, notificationID, email)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to map notification to student %s", email), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("Notifications created successfully"))
+	w.Write([]byte("Notification created successfully"))
 }
+
 func CreateNotificationsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS notifications (
-    id SERIAL PRIMARY KEY,
-    student_email TEXT, -- Null if it's a global notification
-    title TEXT NOT NULL,
-	batch TEXT NOT NULL,
-    message TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW()
+		id TEXT PRIMARY KEY,
+		title TEXT NOT NULL,
+		batch TEXT NOT NULL,
+		message TEXT NOT NULL,
+		created_by TEXT NOT NULL,
+		created_at TIMESTAMP DEFAULT NOW(),
+		FOREIGN KEY (created_by) REFERENCES admins(id)
 	);
 
+	CREATE TABLE IF NOT EXISTS notification_students (
+		notification_id TEXT NOT NULL,
+		student_email TEXT NOT NULL,
+		is_read BOOLEAN DEFAULT FALSE,
+		PRIMARY KEY (notification_id, student_email),
+		FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+		FOREIGN KEY (student_email) REFERENCES students(college_email)
+	);
 	`
 
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatalf("Error creating notifications table: %v", err)
+		log.Fatalf("Error creating notifications tables: %v", err)
 	} else {
-		log.Println("Notifications table ensured to exist.")
+		log.Println("Notifications and notification_students tables ensured to exist.")
 	}
 }
+
 func GetNotificationsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -148,15 +148,16 @@ func GetNotificationsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 		return
 	}
 
-	// Extract student ID from token claims
+	// Extract student email from token claims
 	studentEmail := claims["college_email"]
 
 	// Fetch notifications for the student
 	query := `
-		SELECT id, title, message, is_read, created_at
-		FROM notifications
-		WHERE student_email = $1 OR student_email IS NULL
-		ORDER BY created_at DESC
+		SELECT n.id, n.title, n.message, ns.is_read, n.created_at
+		FROM notifications n
+		JOIN notification_students ns ON n.id = ns.notification_id
+		WHERE ns.student_email = $1
+		ORDER BY n.created_at DESC
 	`
 	rows, err := db.Query(query, studentEmail)
 	if err != nil {
@@ -218,7 +219,10 @@ func MarkNotificationAsReadHandler(w http.ResponseWriter, r *http.Request, db *s
 		return
 	}
 
-	// Parse notification ID
+	// Extract student email from token claims
+	studentEmail := claims["college_email"]
+
+	// Parse notification ID from request body
 	var payload struct {
 		NotificationID int `json:"notification_id"`
 	}
@@ -229,11 +233,11 @@ func MarkNotificationAsReadHandler(w http.ResponseWriter, r *http.Request, db *s
 
 	// Mark notification as read
 	query := `
-		UPDATE notifications
+		UPDATE notification_students
 		SET is_read = TRUE
-		WHERE id = $1
+		WHERE notification_id = $1 AND student_email = $2
 	`
-	if _, err := db.Exec(query, payload.NotificationID); err != nil {
+	if _, err := db.Exec(query, payload.NotificationID, studentEmail); err != nil {
 		http.Error(w, "Failed to update notification", http.StatusInternalServerError)
 		log.Print(err)
 		return
