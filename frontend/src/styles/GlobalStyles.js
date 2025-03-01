@@ -81,6 +81,7 @@ body {
   line-height: 1.5;
   font-size: 1.6rem;
   background-color: var(--color-grey-50);
+  overflow:hidden;
 }
 
 button {

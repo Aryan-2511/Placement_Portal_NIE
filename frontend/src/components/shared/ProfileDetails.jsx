@@ -11,14 +11,15 @@ import {
 import HrBreak from '../ui/HrBreak';
 import { useUser } from '@/features/authentication/useUser';
 import dateFormatter from '@/utils/dateFormatter';
+import Form from './Form';
 
 function ProfileDetails() {
   const [isEditable, setIsEditable] = useState(false);
   const user = useUser();
   return (
-    <form className="p-[3.2rem] bg-[var(--color-grey-0)] shadow-[var(--shadow-lg)]">
+    <Form>
       <p className="font-semibold mb-[2.4rem]">Personal details</p>
-      <FormRow label="Fullname" className="">
+      <FormRow label="Fullname">
         <Input
           type="text"
           value={user.name}
@@ -27,7 +28,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Contact" className="">
+      <FormRow label="Contact">
         <Input
           type="text"
           value={user.contact}
@@ -36,7 +37,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Address" className="">
+      <FormRow label="Address">
         <Input
           type="text"
           value={user.address}
@@ -45,7 +46,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Gender" className="">
+      <FormRow label="Gender">
         <Select defaultValue={user.gender} disabled={!isEditable}>
           <SelectTrigger className="">
             <SelectValue placeholder="Select" />
@@ -56,7 +57,7 @@ function ProfileDetails() {
           </SelectContent>
         </Select>
       </FormRow>
-      <FormRow label="Category" className="">
+      <FormRow label="Category">
         <Select defaultValue={user.category} disabled={!isEditable}>
           <SelectTrigger className="">
             <SelectValue placeholder="Select" />
@@ -68,7 +69,7 @@ function ProfileDetails() {
           </SelectContent>
         </Select>
       </FormRow>
-      <FormRow label="Date of Birth" className="">
+      <FormRow label="Date of Birth">
         <Input
           type="date"
           value={dateFormatter(user.dob, 'date')}
@@ -77,7 +78,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Personal email" className="">
+      <FormRow label="Personal email">
         <Input
           type="text"
           value={user.personal_email}
@@ -86,7 +87,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="AADHAR" className="">
+      <FormRow label="AADHAR">
         <Input
           type="text"
           value={user.aadhar}
@@ -95,7 +96,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="PAN" className="">
+      <FormRow label="PAN">
         <Input
           type="text"
           value={user.pan}
@@ -108,7 +109,7 @@ function ProfileDetails() {
       {/* Academic details */}
       <HrBreak />
       <p className="font-semibold mb-[2.4rem]">Academic details</p>
-      <FormRow label="USN" className="">
+      <FormRow label="USN">
         <Input
           type="text"
           value={user.usn}
@@ -117,7 +118,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Batch" className="">
+      <FormRow label="Batch">
         <Input
           type="text"
           value={user.batch}
@@ -126,7 +127,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="College email" className="">
+      <FormRow label="College email">
         <Input
           type="text"
           value={user.college_email}
@@ -135,7 +136,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Address" className="">
+      <FormRow label="Address">
         <Input
           type="text"
           value="32 street, JP nagar, Karnataka"
@@ -144,7 +145,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Branch" className="">
+      <FormRow label="Branch">
         <Select defaultValue={user.branch} className="" disabled={!isEditable}>
           <SelectTrigger className="">
             <SelectValue placeholder="Select" />
@@ -159,7 +160,7 @@ function ProfileDetails() {
           </SelectContent>
         </Select>
       </FormRow>
-      <FormRow label="Class X percentage" className="">
+      <FormRow label="Class X percentage">
         <Input
           type="number"
           value={user.class_10_percentage}
@@ -168,7 +169,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Class X board" className="">
+      <FormRow label="Class X board">
         <Input
           type="text"
           value={user.class_10_board}
@@ -177,7 +178,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Class XII percentage" className="">
+      <FormRow label="Class XII percentage">
         <Input
           type="number"
           value={user.class_12_percentage}
@@ -186,7 +187,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Class XII board" className="">
+      <FormRow label="Class XII board">
         <Input
           type="text"
           value={user.class_12_board}
@@ -195,7 +196,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Current CGPA" className="">
+      <FormRow label="Current CGPA">
         <Input
           type="number"
           value={user.current_cgpa}
@@ -204,7 +205,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Backlogs" className="">
+      <FormRow label="Backlogs">
         <Input
           type="text"
           value={user.backlogs}
@@ -213,7 +214,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Placement Status" className="">
+      <FormRow label="Placement Status">
         <Input
           type="text"
           value={user.isPlaced.toLowerCase() === 'no' ? 'Not Placed' : 'Placed'}
@@ -222,7 +223,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-      <FormRow label="Resume link" className="">
+      <FormRow label="Resume link">
         <Input
           type="url"
           value={user.resume_link}
@@ -231,7 +232,7 @@ function ProfileDetails() {
           disabled={!isEditable}
         />
       </FormRow>
-    </form>
+    </Form>
   );
 }
 

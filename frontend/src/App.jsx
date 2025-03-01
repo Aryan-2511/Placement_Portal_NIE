@@ -36,6 +36,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import Schedule from './pages/admin/Schedule';
 import Announcements from './pages/admin/Announcements';
 import AdminPanel from './pages/admin/AdminPanel';
+import AdminProfile from './pages/admin/AdminProfile';
+import AddOpportunity from './features/opportunities/AddOpportunity';
 // import { UserRoleProvider } from './context/UserContext';
 // import Logout from './features/authentication/Logout';
 
@@ -89,9 +91,14 @@ const router = createBrowserRouter([
                 element: <ManageOpportunities />,
               },
               {
+                path: 'manage_opportunities/add_new_opportunity',
+                element: <AddOpportunity />,
+              },
+              {
                 path: 'manage_opportunities/:opportunityId',
                 element: <OpportunityDetail />,
               },
+              { path: 'profile', element: <AdminProfile /> },
               { path: 'student_details', element: <StudentDetails /> },
               { path: 'schedule', element: <Schedule /> },
               { path: 'annoucements', element: <Announcements /> },

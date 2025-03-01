@@ -10,7 +10,7 @@ import HrBreak from '@/components/ui/HrBreak';
 import useOpportunity from './useOpportunity';
 import dateFormatter from '@/utils/dateFormatter';
 import useUpdateOpportunity from './useUpdateOpportunity';
-import { fields } from './opportunityFields';
+import { formFields } from './opportunityFields';
 import { useUser } from '../authentication/useUser';
 import { useApplyOpportunity } from '../applications/useApplyOpportunity';
 // import toast from 'react-hot-toast';
@@ -117,7 +117,7 @@ function OpportunityDetail() {
 
         {/* Opportunity Fields */}
         <div className="px-[3.2rem] py-[2.4rem] flex flex-col gap-[3rem] bg-[var(--color-grey-0)]">
-          {fields.map(({ name, label, type }) => (
+          {formFields.map(({ name, label, type }) => (
             <div key={name}>
               <HeadingText>{label}</HeadingText>
               {isEditable ? (

@@ -13,7 +13,6 @@ function Profile() {
         </Button>
         <Button size="lg">Update</Button>
       </div>
-      {/* </div> */}
     </div>
   );
 }

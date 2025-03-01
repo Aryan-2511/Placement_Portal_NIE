@@ -25,7 +25,7 @@ function NumericalStatsCards() {
     <div className="w-full flex items-center justify-between gap-8">
       <NumericalStatCard
         path={'../../../public/icons/dashboard-icons/bag.png'}
-        title={'companies applied for'}
+        title={'active opportunities'}
         color={'var(--color-blue-100)'}
         data={activeOpportunities.active_opportunities}
       />

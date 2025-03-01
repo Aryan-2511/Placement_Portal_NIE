@@ -9,7 +9,7 @@ function NavMenu() {
   return (
     <ul className="flex items-center gap-12 text-[var(--color-blue-700)]">
       <li>
-        <NavLink to="/student/profile">
+        <NavLink to="profile">
           <HiMiniUser size={'2.4rem'} />
         </NavLink>
       </li>

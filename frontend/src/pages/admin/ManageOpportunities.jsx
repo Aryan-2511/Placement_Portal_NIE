@@ -10,6 +10,8 @@ import OpportunityTable from '@/features/opportunities/OpportunityTable';
 import { useState } from 'react';
 import useOpportunities from '@/features/opportunities/useOpportunities';
 import Spinner from '@/components/shared/Spinner';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 function ManageOpportunities() {
   const [batch, setBatch] = useState('2025');
@@ -30,7 +32,10 @@ function ManageOpportunities() {
           </SelectContent>
         </Select>
       </div>
-      <OpportunityTable opportunities={opportunities} />;
+      <OpportunityTable opportunities={opportunities} />
+      <Link to="add_new_opportunity">
+        <Button>Add new opportunity</Button>
+      </Link>
     </div>
   );
 }

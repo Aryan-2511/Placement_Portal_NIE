@@ -63,10 +63,35 @@ export async function getOpportunity(id) {
   }
 }
 
-export async function updateCurrentOpportunity(id, updatedOpportunity) {
-  const { role, token } = JSON.parse(Cookies.get('user'));
-  if (!role) throw new Error('Unauthorized access not allowed!');
+export async function addNewOpportunity(opportunity) {
+  if (!opportunity) throw new Error('Opportunity can be empty!');
   try {
+    console.log(opportunity);
+    const { role, token } = JSON.parse(Cookies.get('user'));
+    if (!role) throw new Error('Unauthorized access not allowed!');
+    const response = await axios.post(`${API_URL}/add`, opportunity, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to add opportunity:', error);
+    if (error.response) {
+      throw new Error(`Error ${error.response.status}: ${error.response.data}`);
+    } else if (error.request) {
+      throw new Error('No response received from the server');
+    } else {
+      throw new Error(error.message);
+    }
+  }
+}
+
+export async function updateCurrentOpportunity(id, updatedOpportunity) {
+  try {
+    const { role, token } = JSON.parse(Cookies.get('user'));
+    if (!role) throw new Error('Unauthorized access not allowed!');
     const response = await axios.put(`${API_URL}/edit`, updatedOpportunity, {
       headers: {
         Authorization: `Bearer ${token}`,
