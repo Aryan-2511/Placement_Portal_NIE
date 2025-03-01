@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/joho/godotenv"
 
@@ -45,37 +44,29 @@ func InitDB() *sql.DB{
 	// fmt.Println("Successfully connected to the database")
 	// return DB
 	var err error
+
+	// Load environment variables
 	if err := godotenv.Load(); err != nil {
-        log.Fatalf("Error loading .env file: %v", err)
-    }
-	dbName  := os.Getenv("DB_NAME") 
-	dbUser 	:= os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbHost := os.Getenv("DB_HOST")
-	dbPortStr := os.Getenv("DB_PORT")
-	dbPort, err := strconv.Atoi(dbPortStr)
-	if err != nil {
-		log.Fatalf("Invalid integer for dbPort: %v", err)
+		log.Println("Warning: .env file not found, using system environment variables")
 	}
 
+	// Fetch database connection details from environment variables
+	dbURL := os.Getenv("RENDER_DB")
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL is not set in environment variables")
+	}
 
-	// Data Source Name (DSN) with password authentication
-	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require",
-		dbHost, dbPort, dbUser, dbPassword, dbName,
-	)
-
-	// Connect to the database
-	db, err := sql.Open("postgres", dsn)
+	// Open a connection to the database
+	DB, err = sql.Open("postgres", dbURL)
 	if err != nil {
-		log.Fatalf("Error opening database: %v", err)
+		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	// Verify the connection
-	err = db.Ping()
-	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+	if err = DB.Ping(); err != nil {
+		log.Fatalf("Failed to ping the database: %v", err)
 	}
 
-	fmt.Println("Successfully connected to the database!")
-	return db
+	fmt.Println("Successfully connected to the Render PostgreSQL database!")
+	return DB
 }
