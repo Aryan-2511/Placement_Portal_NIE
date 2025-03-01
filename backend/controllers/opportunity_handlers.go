@@ -389,60 +389,20 @@ func DeleteOpportunity(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Opportunity deleted successfully"))
 }
-func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db *sql.DB) {
-	type RequestPayload struct {
-		OpportunityID string `json:"opportunity_id"`
-		Completed     string `json:"completed"` // "YES" or "NO"
+func UpdateOpportunityCompletionStatus(db *sql.DB, opportunityID, completed string) error {
+	if completed != "YES" && completed != "NO" {
+		return fmt.Errorf("invalid value for completed field: Use 'YES' or 'NO'")
 	}
-
-	var payload RequestPayload
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-
-	if payload.Completed != "YES" && payload.Completed != "NO" {
-		http.Error(w, "Invalid value for completed field. Use 'YES' or 'NO'.", http.StatusBadRequest)
-		return
-	}
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
-		return
-	}
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-		http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
-		return
-	}
-	tokenString := parts[1]
-
-	// Validate the token
-	claims, err := utils.ValidateToken(tokenString)
-	if err != nil {
-		log.Print(err)
-		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-		return
-	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
-		http.Error(w, "Unauthorized access", http.StatusForbidden)
-		return
-	}
-
 
 	// Start database transaction
 	tx, err := db.Begin()
 	if err != nil {
-		http.Error(w, "Failed to start database transaction", http.StatusInternalServerError)
-		return
+		return fmt.Errorf("failed to start database transaction: %v", err)
 	}
-
 	defer func() {
 		if p := recover(); p != nil {
 			tx.Rollback()
-			http.Error(w, fmt.Sprintf("Internal server error: %v", p), http.StatusInternalServerError)
-			log.Print(err)
+			log.Printf("Recovered from panic: %v", p)
 		}
 	}()
 
@@ -453,49 +413,33 @@ func UpdateOpportunityCompletionStatus(w http.ResponseWriter, r *http.Request,db
 		WHERE id = $2
 		RETURNING completed`
 	var updatedStatus string
-	err = tx.QueryRow(updateOpportunityQuery, payload.Completed, payload.OpportunityID).Scan(&updatedStatus)
+	err = tx.QueryRow(updateOpportunityQuery, completed, opportunityID).Scan(&updatedStatus)
 	if err != nil {
 		tx.Rollback()
-		http.Error(w, "Failed to update opportunity status", http.StatusInternalServerError)
-		log.Print(err)
-		return
+		return fmt.Errorf("failed to update opportunity status: %v", err)
 	}
 
 	// If completed is set to "YES", close all associated applications
-	if payload.Completed == "YES" {
+	if completed == "YES" {
 		updateApplicationsQuery := `
 			UPDATE applications
 			SET status = 'CLOSED'
 			WHERE opportunity_id = $1 AND status != 'CLOSED'`
-		_, err := tx.Exec(updateApplicationsQuery, payload.OpportunityID)
+		_, err := tx.Exec(updateApplicationsQuery, opportunityID)
 		if err != nil {
 			tx.Rollback()
-			http.Error(w, "Failed to update application statuss", http.StatusInternalServerError)
-			log.Print(err)
-			return
+			return fmt.Errorf("failed to update application status: %v", err)
 		}
 	}
 
 	// Commit transaction
 	err = tx.Commit()
 	if err != nil {
-		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
-		log.Print(err)
-		return
+		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	// Success response
-	response := struct {
-		Message       string `json:"message"`
-		UpdatedStatus string `json:"updated_status"`
-		Time          string `json:"time"`
-	}{
-		Message:       "Opportunity completion status updated successfully.",
-		UpdatedStatus: updatedStatus,
-		Time:          time.Now().Format(time.RFC3339),
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	log.Printf("Opportunity completion status updated successfully: %s", updatedStatus)
+	return nil
 }
 func UpdateOpportunityStatusHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	
@@ -660,8 +604,7 @@ func GetOpportunityDetailsHandler(w http.ResponseWriter, r *http.Request,db *sql
 	json.NewEncoder(w).Encode(opportunity)
 }
 
-func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
-	
+func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
@@ -681,8 +624,23 @@ func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *s
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!= "STUDENT"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"] != "STUDENT" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
+		return
+	}
+
+	// Automatically update the opportunity statuses before fetching
+	queryUpdate := `
+		UPDATE opportunities
+		SET status = 'CLOSED'
+		WHERE registration_date <= $1
+		AND status = 'ACTIVE';`
+	
+	now := time.Now()
+	_, err = db.Exec(queryUpdate, now)
+	if err != nil {
+		log.Printf("Error updating opportunity status: %v", err)
+		http.Error(w, "Failed to update opportunity statuses", http.StatusInternalServerError)
 		return
 	}
 
@@ -694,19 +652,33 @@ func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *s
 	}
 
 	// Query the database for opportunities for the specified batch
-	query := `
+	queryFetch := `
 		SELECT id, title, company, location, batch, ctc, category, registration_date, opportunity_type, status
 		FROM opportunities
-		WHERE batch = $1
-	`
-	rows, err := db.Query(query, batch)
+		WHERE batch = $1`
+	
+	rows, err := db.Query(queryFetch, batch)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
-		defer rows.Close()
+	defer rows.Close()
 
-		var opportunities []struct {
+	var opportunities []struct {
+		ID               string    `json:"id"`
+		Title            string    `json:"title"`
+		Company          string    `json:"company"`
+		Location         string    `json:"location"`
+		Batch            string    `json:"batch"`
+		CTC              float64   `json:"ctc"`
+		Category         string    `json:"category"`
+		RegistrationDate time.Time `json:"registration_date"`
+		Opportunity_type string    `json:"opportunity_type"`
+		Status           string    `json:"status"`
+	}
+
+	for rows.Next() {
+		var opportunity struct {
 			ID               string    `json:"id"`
 			Title            string    `json:"title"`
 			Company          string    `json:"company"`
@@ -719,29 +691,15 @@ func GetOpportunitiesByBatchHandler(w http.ResponseWriter, r *http.Request,db *s
 			Status           string    `json:"status"`
 		}
 
-		for rows.Next() {
-			var opportunity struct {
-				ID               string    `json:"id"`
-				Title            string    `json:"title"`
-				Company          string    `json:"company"`
-				Location         string    `json:"location"`
-				Batch            string    `json:"batch"`
-				CTC              float64   `json:"ctc"`
-				Category         string    `json:"category"`
-				RegistrationDate time.Time `json:"registration_date"`
-				Opportunity_type string    `json:"opportunity_type"`
-				Status           string    `json:"status"`
-			}
-
-			if err := rows.Scan(&opportunity.ID, &opportunity.Title, &opportunity.Company, &opportunity.Location, &opportunity.Batch, &opportunity.CTC, &opportunity.Category, &opportunity.RegistrationDate,&opportunity.Opportunity_type, &opportunity.Status); err != nil {
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
-				return
-			}
-
-			opportunities = append(opportunities, opportunity)
+		if err := rows.Scan(&opportunity.ID, &opportunity.Title, &opportunity.Company, &opportunity.Location, &opportunity.Batch, &opportunity.CTC, &opportunity.Category, &opportunity.RegistrationDate, &opportunity.Opportunity_type, &opportunity.Status); err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
 		}
 
-		// Return the list of opportunities as JSON
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(opportunities)
+		opportunities = append(opportunities, opportunity)
+	}
+
+	// Return the list of opportunities as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(opportunities)
 }

@@ -26,6 +26,7 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
+
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
@@ -45,25 +46,9 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
-	}
-
-
-	tableName := "placed_students"
-
-	exists, err := utils.CheckTableExists(db, tableName)
-	if err != nil {
-		log.Printf("Error checking table existence: %v", err)
-		return
-	}
-
-	if exists {
-		fmt.Printf("Table '%s' exists.\n", tableName)
-	} else {
-		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
 	}
 
 	var payload struct {
@@ -80,12 +65,12 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	// Check if the student exists in the `students` table
+	// Check if the student exists
 	var student struct {
-		Name   string
-		Email  string
-		Branch string
-		Batch  string
+		Name    string
+		Email   string
+		Branch  string
+		Batch   string
 		Contact string
 	}
 	queryStudent := `SELECT name, college_email, branch, batch, contact FROM students WHERE usn = $1`
@@ -96,14 +81,14 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	// Check if the opportunity exists in the `opportunities` table
+	// Check if the opportunity exists
 	var opportunity struct {
-		Company          string
-		Package          float64
-		Opportunity_type string
+		Company         string
+		Package         float64
+		OpportunityType string
 	}
 	queryOpportunity := `SELECT company, ctc, opportunity_type FROM opportunities WHERE id = $1`
-	err = db.QueryRow(queryOpportunity, payload.OpportunityID).Scan(&opportunity.Company, &opportunity.Package, &opportunity.Opportunity_type)
+	err = db.QueryRow(queryOpportunity, payload.OpportunityID).Scan(&opportunity.Company, &opportunity.Package, &opportunity.OpportunityType)
 	if err != nil {
 		log.Printf("Error fetching opportunity details: %v", err)
 		http.Error(w, "Opportunity not found in the database", http.StatusBadRequest)
@@ -116,7 +101,7 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10, $11)
 	`
 	placementID := GeneratePlacementID(fmt.Sprintf("20%s", payload.OpportunityID[2:4]), 1) // Simplified
-	_, err = db.Exec(queryInsert, placementID, payload.USN, payload.OpportunityID, student.Name, student.Email, student.Branch, student.Batch, opportunity.Company, opportunity.Package, student.Contact, opportunity.Opportunity_type)
+	_, err = db.Exec(queryInsert, placementID, payload.USN, payload.OpportunityID, student.Name, student.Email, student.Branch, student.Batch, opportunity.Company, opportunity.Package, student.Contact, opportunity.OpportunityType)
 	if err != nil {
 		log.Printf("Error inserting placed student data: %v", err)
 		http.Error(w, "Error marking student as placed", http.StatusInternalServerError)
@@ -129,6 +114,14 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if err != nil {
 		log.Printf("Error updating student's placement status: %v", err)
 		http.Error(w, "Error marking student as placed", http.StatusInternalServerError)
+		return
+	}
+
+	// **Update the opportunity completion status**
+	err = UpdateOpportunityCompletionStatus(db, payload.OpportunityID, "YES")
+	if err != nil {
+		log.Printf("Error updating opportunity completion status: %v", err)
+		http.Error(w, "Error updating opportunity status", http.StatusInternalServerError)
 		return
 	}
 

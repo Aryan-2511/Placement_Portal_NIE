@@ -76,7 +76,7 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		fmt.Printf("Table '%s' exists.\n", tableName)
 	} else {
 		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
-		CreateApplicationsTable(db)
+		CreateScheduleTable(db)
 	}
     query := `
         INSERT INTO schedule (schedule_id, title, description, start_time, end_time, created_by, batch)

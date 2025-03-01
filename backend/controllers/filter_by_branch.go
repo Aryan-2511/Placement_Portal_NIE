@@ -39,15 +39,19 @@ func FilterByBranch(w http.ResponseWriter,r *http.Request,db *sql.DB){
 		return
 	}
 	
-
+	batch := r.URL.Query().Get("batch")
+	if batch == ""{
+		http.Error(w,"Batch not provided",http.StatusBadRequest)
+		return
+	}
 	branch := r.URL.Query().Get("branch")
 	if branch == ""{
 		http.Error(w,"Branch not provided",http.StatusBadRequest)
 		return
 	}
 
-	query := `SELECT name, usn, college_email, personal_email, contact, branch, batch, current_cgpa FROM students WHERE branch = $1`
-	rows,err := db.Query(query,branch)
+	query := `SELECT name, usn, college_email, personal_email, contact, branch, batch, current_cgpa FROM students WHERE batch = $1 AND branch = $2`
+	rows,err := db.Query(query,batch,branch)
 	
 	if err!=nil{
 		log.Printf("Error querying database: %v", err)
