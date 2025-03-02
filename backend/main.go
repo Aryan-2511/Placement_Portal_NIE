@@ -44,7 +44,7 @@ func main() {
 	defer db.Close()
 
 	http.Handle("/student/details", controllers.AuthMiddleware((withDatabaseAndCORS(db,controllers.GetStudentDetailsHandler))))
-	http.Handle("/signup", withDatabaseAndCORS(db,controllers.SignupHandler))												// Route for student signup
+	http.Handle("/signup", withDatabaseAndCORS(db,controllers.SignupHandler))						// Route for student signup
 	http.Handle("/login", withDatabaseAndCORS(db,controllers.LoginHandler))													// Route for login
 	http.Handle("/logout", withDatabaseAndCORS(db,controllers.LogoutHandler))													// Route for logout	
 	http.Handle("/student/edit", withDatabaseAndCORS(db,controllers.EditStudentDetailsHandler))												// Route for editing student details
