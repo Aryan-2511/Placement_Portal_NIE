@@ -54,16 +54,6 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     } else {
         fmt.Print("Batch is empty")
     }
-
-    queryCount := `SELECT COUNT(*) FROM schedule WHERE batch = $1`
-    var count int
-    err = db.QueryRow(queryCount, event.Batch).Scan(&count)
-    if err != nil {
-        http.Error(w, "Error generating schedule ID", http.StatusInternalServerError)
-        return
-    }
-
-    scheduleID := fmt.Sprintf("SCH%s%03d", batchPart, count+1)
 	tableName := "schedule"
 
 	exists, err := utils.CheckTableExists(db, tableName)
@@ -78,6 +68,18 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		fmt.Printf("Table '%s' does not exist. Creating table...\n", tableName)
 		CreateScheduleTable(db)
 	}
+
+
+    queryCount := `SELECT COUNT(*) FROM schedule WHERE batch = $1`
+    var count int
+    err = db.QueryRow(queryCount, event.Batch).Scan(&count)
+    if err != nil {
+        http.Error(w, "Error generating schedule ID", http.StatusInternalServerError)
+        return
+    }
+
+    scheduleID := fmt.Sprintf("SCH%s%03d", batchPart, count+1)
+	
     query := `
         INSERT INTO schedule (schedule_id, title, description, start_time, end_time, created_by, batch)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
