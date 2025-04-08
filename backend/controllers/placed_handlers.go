@@ -64,6 +64,21 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "USN and OpportunityID are required", http.StatusBadRequest)
 		return
 	}
+    tableName := "placed_students"
+    exists, err := utils.CheckTableExists(db, tableName)
+    if err != nil {
+        log.Printf("Error checking table existence: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+
+    if !exists {
+        log.Printf("Table '%s' does not exist. Creating table...", tableName)
+        if err = CreatePlacedStudentsTable(db); err != nil {
+            http.Error(w, "Failed to create table", http.StatusInternalServerError)
+            return
+        }
+    }
 
 	// Check if the student exists
 	var student struct {
@@ -129,32 +144,33 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	w.Write([]byte("Student marked as placed successfully"))
 }
 
-func CreatePlacedStudentsTable(db *sql.DB) {
+func CreatePlacedStudentsTable(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS placed_students (
-    id VARCHAR(15) PRIMARY KEY,
-    usn VARCHAR(10) NOT NULL,
-    opportunity_id VARCHAR(15) NOT NULL,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    branch VARCHAR(50) NOT NULL,
-    batch VARCHAR(10) NOT NULL,
-    company VARCHAR(100) NOT NULL,
-    package NUMERIC(10, 2) NOT NULL,
-    placement_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    contact VARCHAR(15) NOT NULL,
-    placement_type VARCHAR(50) DEFAULT 'PLACEMENT',
-    FOREIGN KEY (usn) REFERENCES students(usn),
-    FOREIGN KEY (opportunity_id) REFERENCES opportunities(id)
+		id VARCHAR(15) PRIMARY KEY,
+		usn VARCHAR(10) NOT NULL,
+		opportunity_id VARCHAR(15) NOT NULL,
+		name VARCHAR(100) NOT NULL,
+		email VARCHAR(100) NOT NULL,
+		branch VARCHAR(50) NOT NULL,
+		batch VARCHAR(10) NOT NULL,
+		company VARCHAR(100) NOT NULL,
+		package NUMERIC(10, 2) NOT NULL,
+		placement_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		contact VARCHAR(15) NOT NULL,
+		placement_type VARCHAR(50) DEFAULT 'PLACEMENT',
+		FOREIGN KEY (usn) REFERENCES students(usn),
+		FOREIGN KEY (opportunity_id) REFERENCES opportunities(id)
 	);
 	`
 
 	_, err := db.Exec(query)
 	if err != nil {
-		log.Fatalf("Failed to create table: %v", err)
-	} else {
-		log.Println("Table `placed_students` created or already exists.")
+		log.Printf("Failed to create table: %v", err)
+		return err
 	}
+	log.Println("Table `placed_students` created or already exists.")
+	return nil
 }
 func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodDelete {

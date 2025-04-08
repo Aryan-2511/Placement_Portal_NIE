@@ -51,6 +51,16 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
+
+	// Add validation for empty USN
+	if request.StudentUSN == "" {
+		log.Printf("Empty USN received in request")
+		http.Error(w, "Student USN is required", http.StatusBadRequest)
+		return
+	}
+
+	// Add debug log for the request payload
+	log.Printf("Received application request - USN: %s, OpportunityID: %s", request.StudentUSN, request.OpportunityID)
 	tableName := "applications"
 	exists, err := utils.CheckTableExists(db, tableName)
 	if err != nil {
@@ -95,21 +105,56 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	var student models.User
 	studentQuery := `SELECT usn, name, current_cgpa, class_10_percentage, class_12_percentage, branch, batch, backlogs, gender 
                      FROM students WHERE usn = $1`
+	
+	// Debug: Print the query and USN
+	log.Printf("Executing query: %s with USN: %s", studentQuery, request.StudentUSN)
+	
+	// First, verify the exact data in the database
+	var debugStudent struct {
+	    USN string
+	    Fields []string
+	}
+	debugRow := db.QueryRow("SELECT usn, array_agg(column_name::text) FROM students, information_schema.columns WHERE table_name='students' AND usn = $1 GROUP BY usn", request.StudentUSN)
+	err = debugRow.Scan(&debugStudent.USN, &debugStudent.Fields)
+	if err != nil {
+	    log.Printf("Debug - Database content check failed: %v", err)
+	} else {
+	    log.Printf("Debug - Found student with USN: %s, Available fields: %v", debugStudent.USN, debugStudent.Fields)
+	}
+
+	// Original query
 	err = db.QueryRow(studentQuery, request.StudentUSN).Scan(
-		&student.USN,
-		&student.Name,
-		&student.Current_CGPA,
-		&student.Class_10_Percentage,
-		&student.Class_12_Percentage,
-		&student.Branch,
-		&student.Batch,
-		&student.Backlogs,
-		&student.Gender,
+	    &student.USN,
+	    &student.Name,
+	    &student.Current_CGPA,
+	    &student.Class_10_Percentage,
+	    &student.Class_12_Percentage,
+	    &student.Branch,
+	    &student.Batch,
+	    &student.Backlogs,
+	    &student.Gender,
 	)
 	if err != nil {
-		http.Error(w, "Student not found", http.StatusNotFound)
-		log.Print(err)
-		return
+	    log.Printf("Detailed error when fetching student: %+v", err)
+	    // Check column names in the database
+	    var columnNames []string
+	    colQuery := `
+	        SELECT column_name 
+	        FROM information_schema.columns 
+	        WHERE table_name = 'students' 
+	        ORDER BY ordinal_position;
+	    `
+	    rows, _ := db.Query(colQuery)
+	    defer rows.Close()
+	    for rows.Next() {
+	        var colName string
+	        rows.Scan(&colName)
+	        columnNames = append(columnNames, colName)
+	    }
+	    log.Printf("Available columns in students table: %v", columnNames)
+	    
+	    http.Error(w, "Error fetching student details", http.StatusInternalServerError)
+	    return
 	}
 
 	// Fetch necessary opportunity details
