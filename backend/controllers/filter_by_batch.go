@@ -10,7 +10,7 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func FilterByBatch(w http.ResponseWriter,r *http.Request,db *sql.DB){
+func FilterByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -41,30 +41,42 @@ func FilterByBatch(w http.ResponseWriter,r *http.Request,db *sql.DB){
 	
 
 	batch := r.URL.Query().Get("batch")
-	if batch == ""{
-		http.Error(w,"Batch not provided",http.StatusBadRequest)
+	if batch == "" {
+		http.Error(w, "Batch not provided", http.StatusBadRequest)
 		return
 	}
 
-	query := `SELECT name, usn, college_email, personal_email,  contact, branch, batch, current_cgpa FROM students WHERE batch = $1`
-	rows,err := db.Query(query,batch)
+	query := `SELECT name, usn, college_email, personal_email, branch, batch, contact, current_cgpa 
+              FROM students WHERE batch = $1`
+	rows, err := db.Query(query, batch)
 	
-	if err!=nil{
+	if err != nil {
 		log.Printf("Error querying database: %v", err)
-		http.Error(w,"Internal server error",http.StatusInternalServerError)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
+
 	var students []models.User
-	for rows.Next(){
+	for rows.Next() {
 		var student models.User
-		if err := rows.Scan(&student.Name, &student.USN, &student.College_Email, &student.Personal_Email, &student.Contact, &student.Branch, &student.Batch, &student.Current_CGPA); err!=nil{
+		if err := rows.Scan(
+			&student.Name,
+			&student.USN,
+			&student.College_Email,
+			&student.Personal_Email,
+			&student.Branch,
+			&student.Batch,
+			&student.Contact,
+			&student.Current_CGPA,
+		); err != nil {
 			log.Printf("Error scanning row: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 		students = append(students, student)
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(students)
 }
