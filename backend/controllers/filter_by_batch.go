@@ -1,18 +1,30 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
-	"database/sql"
 	"strings"
-	"Github.com/Aryan-2511/Placement_NIE/models"
+
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
+// Add this struct at the top with other imports
+type FilteredStudent struct {
+	Name           string  `json:"name"`
+	USN            string  `json:"usn"`
+	College_Email  string  `json:"college_email"`
+	Personal_Email string  `json:"personal_email"`
+	Branch         string  `json:"branch"`
+	Batch          string  `json:"batch"`
+	Contact        string  `json:"contact"`
+	Current_CGPA   float64 `json:"current_cgpa"`
+}
+
 func FilterByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	if r.Method!=http.MethodGet{
-		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 	authHeader := r.Header.Get("Authorization")
@@ -38,7 +50,6 @@ func FilterByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-	
 
 	batch := r.URL.Query().Get("batch")
 	if batch == "" {
@@ -49,7 +60,7 @@ func FilterByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	query := `SELECT name, usn, college_email, personal_email, branch, batch, contact, current_cgpa 
               FROM students WHERE batch = $1`
 	rows, err := db.Query(query, batch)
-	
+
 	if err != nil {
 		log.Printf("Error querying database: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -57,9 +68,9 @@ func FilterByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 	defer rows.Close()
 
-	var students []models.User
+	var students []FilteredStudent
 	for rows.Next() {
-		var student models.User
+		var student FilteredStudent
 		if err := rows.Scan(
 			&student.Name,
 			&student.USN,
