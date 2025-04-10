@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -37,14 +37,14 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN"{
+	if claims["role"] != "ADMIN" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-	
+
 	var coordinator models.PlacementCoordinator
-	if err := json.NewDecoder(r.Body).Decode(&coordinator); err!=nil{
-		http.Error(w,"Invalid request payload",http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&coordinator); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(coordinator.Password), bcrypt.DefaultCost)
@@ -54,7 +54,7 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		return
 	}
 	// Insert into database
-	tableName := "students"
+	tableName := "admins"
 	exists, err := utils.CheckTableExists(db, tableName)
 	if err != nil {
 		log.Printf("Error checking table existence: %v", err)
@@ -151,8 +151,8 @@ func CreatePlacementCoordinatorsTable(db *sql.DB) {
 	}
 }
 
-func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.DB){
-	
+func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -176,11 +176,10 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN"{
+	if claims["role"] != "ADMIN" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 
 	if db == nil {
 		log.Println("Failed to initialize the database")
@@ -223,7 +222,7 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request,db *sql.
 	json.NewEncoder(w).Encode(coordinators)
 }
 
-func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -247,14 +246,14 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.D
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN"{
+	if claims["role"] != "ADMIN" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
 	usn := r.URL.Query().Get("usn")
-	if usn == ""{
-		http.Error(w,"USN is required", http.StatusBadRequest)
+	if usn == "" {
+		http.Error(w, "USN is required", http.StatusBadRequest)
 		return
 	}
 
@@ -310,8 +309,9 @@ func DeletePlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.D
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Placement coordinator deleted successfully"))
 }
+
 // EditPlacementCoordinator updates the details of a placement coordinator
-func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -336,11 +336,10 @@ func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request,db *sql.DB)
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN"{
+	if claims["role"] != "ADMIN" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 
 	var coordinator models.PlacementCoordinator
 	if err := json.NewDecoder(r.Body).Decode(&coordinator); err != nil {
