@@ -6,21 +6,40 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func GeneratePlacementID(batch string, serial int) string {
-	// Format serial number as a 4-digit string
-	serialStr := fmt.Sprintf("%04d", serial)
 
-	// Extract the last two digits of the batch (e.g., "2025" -> "25")
+func GeneratePlacementID(db *sql.DB, batch string) (string, error) {
+	// Get the current highest serial number for this batch
+	var maxID string
 	batchCode := batch[len(batch)-2:]
+	query := `SELECT id FROM placed_students WHERE id LIKE $1 ORDER BY id DESC LIMIT 1`
+	err := db.QueryRow(query, fmt.Sprintf("PL%s%%", batchCode)).Scan(&maxID)
 
-	// Return formatted Placement-ID
-	return fmt.Sprintf("PL%s%s", batchCode, serialStr)
+	var serial int
+	if err == sql.ErrNoRows {
+		serial = 1
+	} else if err != nil {
+		return "", err
+	} else {
+		// Extract the serial number from maxID (last 4 characters)
+		serialStr := maxID[len(maxID)-4:]
+		serial, err = strconv.Atoi(serialStr)
+		if err != nil {
+			return "", err
+		}
+		serial++
+	}
+
+	// Format serial number as a 4-digit string
+	return fmt.Sprintf("PL%s%04d", batchCode, serial), nil
 }
+
+// In AddPlacedStudent, update the placement ID generation:
 func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -64,21 +83,21 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "USN and OpportunityID are required", http.StatusBadRequest)
 		return
 	}
-    tableName := "placed_students"
-    exists, err := utils.CheckTableExists(db, tableName)
-    if err != nil {
-        log.Printf("Error checking table existence: %v", err)
-        http.Error(w, "Internal server error", http.StatusInternalServerError)
-        return
-    }
+	tableName := "placed_students"
+	exists, err := utils.CheckTableExists(db, tableName)
+	if err != nil {
+		log.Printf("Error checking table existence: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 
-    if !exists {
-        log.Printf("Table '%s' does not exist. Creating table...", tableName)
-        if err = CreatePlacedStudentsTable(db); err != nil {
-            http.Error(w, "Failed to create table", http.StatusInternalServerError)
-            return
-        }
-    }
+	if !exists {
+		log.Printf("Table '%s' does not exist. Creating table...", tableName)
+		if err = CreatePlacedStudentsTable(db); err != nil {
+			http.Error(w, "Failed to create table", http.StatusInternalServerError)
+			return
+		}
+	}
 
 	// Check if the student exists
 	var student struct {
@@ -115,7 +134,19 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		INSERT INTO placed_students(id, usn, opportunity_id, name, email, branch, batch, company, package, placement_date, contact, placement_type)
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10, $11)
 	`
-	placementID := GeneratePlacementID(fmt.Sprintf("20%s", payload.OpportunityID[2:4]), 1) // Simplified
+	// Generate placement ID
+	placementID, err := GeneratePlacementID(db, student.Batch)
+	if err != nil {
+		log.Printf("Error generating placement ID: %v", err)
+		http.Error(w, "Error generating placement ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Insert into placed_students table
+	queryInsert = `
+	    INSERT INTO placed_students(id, usn, opportunity_id, name, email, branch, batch, company, package, placement_date, contact, placement_type)
+	    VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10, $11)
+	`
 	_, err = db.Exec(queryInsert, placementID, payload.USN, payload.OpportunityID, student.Name, student.Email, student.Branch, student.Batch, opportunity.Company, opportunity.Package, student.Contact, opportunity.OpportunityType)
 	if err != nil {
 		log.Printf("Error inserting placed student data: %v", err)
@@ -159,8 +190,7 @@ func CreatePlacedStudentsTable(db *sql.DB) error {
 		placement_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		contact VARCHAR(15) NOT NULL,
 		placement_type VARCHAR(50) DEFAULT 'PLACEMENT',
-		FOREIGN KEY (usn) REFERENCES students(usn),
-		FOREIGN KEY (opportunity_id) REFERENCES opportunities(id)
+		FOREIGN KEY (usn) REFERENCES students(usn)
 	);
 	`
 
@@ -197,11 +227,10 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 
 	usn := r.URL.Query().Get("usn")
 	if usn == "" {
@@ -243,7 +272,7 @@ func DeletePlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	w.Write([]byte("Placed student deleted successfully"))
 }
 
-func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
+func EditPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -267,7 +296,7 @@ func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
@@ -301,7 +330,7 @@ func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 			SET name = $1, email = $2 , branch = $3, batch = $4, company = $5, package = $6, placement_date = $7, contact = $8, placement_type = $9
 			WHERE usn = $10
 			`
-	_,err = db.Exec(query,
+	_, err = db.Exec(query,
 		placed_student.Name,
 		placed_student.Email,
 		placed_student.Branch,
@@ -320,5 +349,5 @@ func EditPlacedStudent(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Placed student details updated successfully"))	
+	w.Write([]byte("Placed student details updated successfully"))
 }
