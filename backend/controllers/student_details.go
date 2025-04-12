@@ -31,7 +31,7 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "STUDENT" {
+	if claims["role"] != "STUDENT" && claims["role"] != "ADMIN" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
@@ -111,7 +111,7 @@ func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.D
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "STUDENT" && claims["role"] != "ADMIN" {
+	if claims["role"] != "STUDENT" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
