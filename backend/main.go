@@ -1,4 +1,4 @@
-kipackage main
+package main
 
 import (
 	"database/sql"
@@ -78,7 +78,7 @@ func main() {
 	http.Handle("/student-dash/total-placed-students", withDatabaseAndAuth(db, controllers.GetPlacedStudentsCount))     // Route for getting events of a student
 	http.Handle("/student-dash/total-applications", withDatabaseAndAuth(db, controllers.GetTotalApplicationsByStudent)) // Route for getting events of a student
 	http.Handle("/students/all-by-batch", withDatabaseAndAuth(db, controllers.FilterByBatch))                           // Route for getting events of a student
-	http.Handle("/students/all-by-branch", withDatabaseAndAuth(db, controllers.FilterByBranch))                   // Route for getting events of a student
+	http.Handle("/students/all-by-branch", withDatabaseAndAuth(db, controllers.FilterByBranch))                         // Route for getting events of a student
 
 	// http.Handle("/protected", controllers.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Fprintln(w, "Welcome to the protected route!")
