@@ -38,6 +38,7 @@ import Announcements from './pages/admin/Announcements';
 import AdminPanel from './pages/admin/AdminPanel';
 import AdminProfile from './pages/admin/AdminProfile';
 import AddOpportunity from './features/opportunities/AddOpportunity';
+import StudentProfile from './pages/admin/StudentProfile';
 // import { UserRoleProvider } from './context/UserContext';
 // import Logout from './features/authentication/Logout';
 
@@ -100,6 +101,7 @@ const router = createBrowserRouter([
               },
               { path: 'profile', element: <AdminProfile /> },
               { path: 'student_details', element: <StudentDetails /> },
+              { path: 'student_details/:usn', element: <StudentProfile /> },
               { path: 'schedule', element: <Schedule /> },
               { path: 'annoucements', element: <Announcements /> },
               { path: 'admin_panel', element: <AdminPanel /> },
