@@ -120,12 +120,20 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		Company         string
 		Package         float64
 		OpportunityType string
+		Batch           string
 	}
-	queryOpportunity := `SELECT company, ctc, opportunity_type FROM opportunities WHERE id = $1`
-	err = db.QueryRow(queryOpportunity, payload.OpportunityID).Scan(&opportunity.Company, &opportunity.Package, &opportunity.OpportunityType)
+	// After fetching student and opportunity details, add this check:
+	queryOpportunity := `SELECT company, ctc, opportunity_type, batch FROM opportunities WHERE id = $1`
+	err = db.QueryRow(queryOpportunity, payload.OpportunityID).Scan(&opportunity.Company, &opportunity.Package, &opportunity.OpportunityType, &opportunity.Batch)
 	if err != nil {
 		log.Printf("Error fetching opportunity details: %v", err)
 		http.Error(w, "Opportunity not found in the database", http.StatusBadRequest)
+		return
+	}
+
+	// Check if student's batch matches opportunity's batch
+	if student.Batch != opportunity.Batch {
+		http.Error(w, fmt.Sprintf("Student batch (%s) does not match opportunity batch (%s)", student.Batch, opportunity.Batch), http.StatusBadRequest)
 		return
 	}
 
