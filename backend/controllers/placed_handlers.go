@@ -134,6 +134,26 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		INSERT INTO placed_students(id, usn, opportunity_id, name, email, branch, batch, company, package, placement_date, contact, placement_type)
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10, $11)
 	`
+	// After checking if student exists and before generating placement ID, add this check:
+	// Check if student is already placed in the same company
+	var existingPlacement bool
+	checkDuplicateQuery := `
+	    SELECT EXISTS(
+	        SELECT 1 FROM placed_students 
+	        WHERE usn = $1 AND company = $2
+	    )`
+	err = db.QueryRow(checkDuplicateQuery, payload.USN, opportunity.Company).Scan(&existingPlacement)
+	if err != nil {
+		log.Printf("Error checking existing placement: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if existingPlacement {
+		http.Error(w, "Student is already placed in this company", http.StatusConflict)
+		return
+	}
+
 	// Generate placement ID
 	placementID, err := GeneratePlacementID(db, student.Batch)
 	if err != nil {
