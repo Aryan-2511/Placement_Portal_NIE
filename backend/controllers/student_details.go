@@ -43,7 +43,6 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 		return
 	}
 
-
 	// Query to fetch student details based on USN
 	query := `
 		SELECT name, usn, dob, college_email, personal_email, branch, batch, address, 
@@ -61,7 +60,7 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 		&student.Contact, &student.Gender, &student.Category, &student.Aadhar,
 		&student.PAN, &student.Class_10_Percentage, &student.Class_10_Year,
 		&student.Class_10_Board, &student.Class_12_Percentage, &student.Class_12_Year,
-		&student.Class_12_Board, &student.Current_CGPA, &student.Backlogs, &student.Role, &student.IsPlaced,&student.Resume_link,
+		&student.Class_12_Board, &student.Current_CGPA, &student.Backlogs, &student.Role, &student.IsPlaced, &student.Resume_link,
 	)
 
 	if err != nil {
@@ -90,10 +89,10 @@ func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.D
 		return
 	}
 	if r.Method != http.MethodPost {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-    authHeader := r.Header.Get("Authorization")
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
@@ -112,11 +111,10 @@ func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.D
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "STUDENT"{
+	if claims["role"] != "STUDENT" && claims["role"] != "ADMIN" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-
 
 	// Extract USN from the request query parameters
 	usn := r.URL.Query().Get("usn")
@@ -203,4 +201,3 @@ func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.D
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Student details updated successfully"})
 }
-
