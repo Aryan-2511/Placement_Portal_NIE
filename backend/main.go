@@ -1,4 +1,4 @@
-kipackage main
+package main
 
 import (
 	"database/sql"
