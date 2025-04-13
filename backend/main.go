@@ -78,7 +78,7 @@ func main() {
 	http.Handle("/student-dash/total-placed-students", withDatabaseAndAuth(db, controllers.GetPlacedStudentsCount))     // Route for getting events of a student
 	http.Handle("/student-dash/total-applications", withDatabaseAndAuth(db, controllers.GetTotalApplicationsByStudent)) // Route for getting events of a student
 	http.Handle("/students/all-by-batch", withDatabaseAndAuth(db, controllers.FilterByBatch))                           // Route for getting events of a student
-	http.Handle("/students/all-by-branch", withDatabaseAndAuth(db, controllers.FilterByBranch))                   // Route for getting events of a student
+	http.Handle("/students/all-by-branch", withDatabaseAndAuth(db, controllers.FilterByBranch))                         // Route for getting events of a student
 
 	// http.Handle("/protected", controllers.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Fprintln(w, "Welcome to the protected route!")
@@ -90,6 +90,17 @@ func main() {
 	http.Handle("/statistics/events-today", withDatabaseAndAuth(db, controllers.GetEventsToday))
 	http.Handle("/statistics/total-opportunities", withDatabaseAndAuth(db, controllers.GetTotalOpportunitiesForBatch))
 	http.Handle("/applications/by-batch", withDatabaseAndAuth(db, controllers.GetApplicationsByBatch))
+
+	// Site Notifications Routes
+	http.Handle("/notifications/add", withDatabaseAndAuth(db, controllers.AddNotificationHandler))
+	http.Handle("/notifications/get", withDatabaseAndAuth(db, controllers.GetNotificationsHandler))
+	http.Handle("/notifications/mark-read", withDatabaseAndAuth(db, controllers.MarkNotificationAsReadHandler))
+
+	// Email Notifications Route
+	http.Handle("/notifications/send", withDatabaseAndAuth(db, controllers.SendNotificationHandler))
+
+	// Initialize notifications tables
+	controllers.CreateNotificationsTable(db)
 
 	port := ":8080"
 	fmt.Printf("Server running on port %s\n", port)
