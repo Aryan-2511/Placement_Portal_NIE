@@ -101,6 +101,8 @@ func main() {
 
 	// Initialize notifications tables
 	controllers.CreateNotificationsTable(db)
+	http.Handle("/admin-notifications/get", withDatabaseAndAuth(db, controllers.GetBatchNotificationsHandler))
+	http.Handle("/notifications/delete", withDatabaseAndAuth(db, controllers.DeleteNotificationHandler))
 
 	port := ":8080"
 	fmt.Printf("Server running on port %s\n", port)
