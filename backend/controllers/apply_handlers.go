@@ -355,3 +355,110 @@ func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sq
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(applications)
 }
+
+func GetApplicationsByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+    if r.Method != http.MethodGet {
+        http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
+    // Authentication check
+    authHeader := r.Header.Get("Authorization")
+    if authHeader == "" {
+        http.Error(w, "Authorization token is required", http.StatusUnauthorized)
+        return
+    }
+    parts := strings.Split(authHeader, " ")
+    if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+        http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+        return
+    }
+    tokenString := parts[1]
+
+    claims, err := utils.ValidateToken(tokenString)
+    if err != nil {
+        log.Print(err)
+        http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+        return
+    }
+    if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
+        http.Error(w, "Unauthorized access", http.StatusForbidden)
+        return
+    }
+
+    batch := r.URL.Query().Get("batch")
+    if batch == "" {
+        http.Error(w, "Batch parameter is required", http.StatusBadRequest)
+        return
+    }
+
+    query := `
+        SELECT 
+            a.id,
+            a.student_usn,
+            a.student_name,
+            a.opportunity_id,
+            a.applied_at,
+            a.status,
+            o.company,
+            o.title
+        FROM 
+            applications a
+        INNER JOIN 
+            students s ON a.student_usn = s.usn
+        INNER JOIN 
+            opportunities o ON a.opportunity_id = o.id
+        WHERE 
+            s.batch = $1
+        ORDER BY 
+            a.applied_at DESC`
+
+    rows, err := db.Query(query, batch)
+    if err != nil {
+        log.Printf("Error fetching applications: %v", err)
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    type ExtendedApplication struct {
+        models.Application
+        Company string `json:"company"`
+        JobTitle string `json:"job_title"`
+    }
+
+    var applications []ExtendedApplication
+    for rows.Next() {
+        var app ExtendedApplication
+        err := rows.Scan(
+            &app.ID,
+            &app.StudentUSN,
+            &app.StudentName,
+            &app.OpportunityID,
+            &app.AppliedAt,
+            &app.Status,
+            &app.Company,
+            &app.JobTitle,
+        )
+        if err != nil {
+            log.Printf("Error scanning application: %v", err)
+            continue
+        }
+        applications = append(applications, app)
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    if len(applications) == 0 {
+        json.NewEncoder(w).Encode(map[string]interface{}{
+            "message": "No applications found for this batch",
+            "applications": []ExtendedApplication{},
+        })
+        return
+    }
+
+    json.NewEncoder(w).Encode(map[string]interface{}{
+        "batch": batch,
+        "total_applications": len(applications),
+        "applications": applications,
+    })
+}

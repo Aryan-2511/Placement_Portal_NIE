@@ -84,6 +84,13 @@ func main() {
 	// 	fmt.Fprintln(w, "Welcome to the protected route!")
 	// })))
 
+	// Add these new routes
+	http.Handle("/statistics/total-students", withDatabaseAndAuth(db, controllers.GetTotalStudentsInBatch))
+	http.Handle("/statistics/total-placed", withDatabaseAndAuth(db, controllers.GetTotalPlacedInBatch))
+	http.Handle("/statistics/events-today", withDatabaseAndAuth(db, controllers.GetEventsToday))
+	http.Handle("/statistics/total-opportunities", withDatabaseAndAuth(db, controllers.GetTotalOpportunitiesForBatch))
+	http.Handle("/applications/by-batch", withDatabaseAndAuth(db, controllers.GetApplicationsByBatch))
+
 	port := ":8080"
 	fmt.Printf("Server running on port %s\n", port)
 	log.Fatal(http.ListenAndServe(port, nil))
