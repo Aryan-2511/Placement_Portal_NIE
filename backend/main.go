@@ -40,7 +40,7 @@ func main() {
 	db := db.InitDB()
 	defer db.Close()
 
-	http.Handle("/student/details", controllers.AuthMiddleware((withDatabaseAndCORS(db, controllers.GetStudentDetailsHandler))))
+	http.Handle("/student/details", withDatabaseAndAuth(db, controllers.GetStudentDetailsHandler))
 	http.Handle("/signup", withDatabaseAndCORS(db, controllers.SignupHandler))                                       // Route for student signup
 	http.Handle("/login", withDatabaseAndCORS(db, controllers.LoginHandler))                                         // Route for login
 	http.Handle("/logout", withDatabaseAndCORS(db, controllers.LogoutHandler))                                       // Route for logout
