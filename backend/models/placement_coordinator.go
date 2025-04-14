@@ -9,6 +9,6 @@ type PlacementCoordinator struct {
 	Password 	string  `json:"password"`
 	Email    	string  `json:"email"`
 	Contact  	string  `json:"contact"`
-	Role     	string  `json:"role"`
+	Role      string `json:"role"`
 	CreatedAt   time.Time `json:"created_at"`
 }

@@ -188,10 +188,11 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request, db *sql
 	}
 	defer db.Close()
 
+	// Modify the query to include role
 	query := `
-		SELECT pc.usn, a.name, a.email, pc.branch, pc.batch, a.contact, a.created_at 
-		FROM placement_coordinators pc
-		INNER JOIN admins a ON pc.user_id = a.id
+	SELECT pc.usn, a.name, a.email, pc.branch, pc.batch, a.contact, a.created_at, a.role
+	FROM placement_coordinators pc
+	INNER JOIN admins a ON pc.user_id = a.id
 	`
 	rows, err := db.Query(query)
 	if err != nil {
@@ -204,7 +205,16 @@ func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request, db *sql
 	var coordinators []models.PlacementCoordinator
 	for rows.Next() {
 		var pc models.PlacementCoordinator
-		if err := rows.Scan(&pc.USN, &pc.Name, &pc.Email, &pc.Branch, &pc.Batch, &pc.Contact, &pc.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&pc.USN,
+			&pc.Name,
+			&pc.Email,
+			&pc.Branch,
+			&pc.Batch,
+			&pc.Contact,
+			&pc.CreatedAt,
+			&pc.Role, // Add role to scan
+		); err != nil {
 			log.Printf("Error scanning row: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
