@@ -5,16 +5,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 	"net/http"
+	"strings"
 
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// GenerateAdminID creates unique IDs for admins in format: AD{PO/PC}{001}
+// PO for main admin, PC for placement coordinator
 func GenerateAdminID(role string, serial int) string {
 	roleCode := map[string]string{
-		"ADMIN":               "PO", // Default role mapping
+		"ADMIN":                 "PO", // Default role mapping
 		"PLACEMENT_COORDINATOR": "PC",
 	}
 
@@ -25,8 +28,10 @@ func GenerateAdminID(role string, serial int) string {
 	return fmt.Sprintf("AD%s%s", roleCode[role], serialStr)
 }
 
-func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
-	if r.Method != http.MethodPost{
+// AddAdmin creates a new admin user with hashed password and auto-generated ID
+// Only existing admins can create new admin accounts
+func AddAdmin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
@@ -55,8 +60,8 @@ func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
 		return
 	}
 	var admin models.Admin
-	if err := json.NewDecoder(r.Body).Decode(&admin); err!=nil{
-		http.Error(w,"Invalid request payload",http.StatusBadRequest)
+	if err = json.NewDecoder(r.Body).Decode(&admin); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(admin.Password), bcrypt.DefaultCost)
@@ -91,17 +96,20 @@ func AddAdmin(w http.ResponseWriter,r *http.Request,db *sql.DB){
 			INSERT INTO admins(id, name, password_hash, email, contact, role, created_at)
 			VALUES($1, $2, $3, $4, $5, $6, NOW())
 			`
-	_,err = db.Exec(query,adminID,admin.Name, hashedPassword, admin.Email, admin.Contact, admin.Role)
-	if err != nil{
+	_, err = db.Exec(query, adminID, admin.Name, hashedPassword, admin.Email, admin.Contact, admin.Role)
+	if err != nil {
 		log.Printf("Error adding admin: %v", err)
-		http.Error(w,"Internal server error", http.StatusInternalServerError)
-		return 
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Admin added successfully"))
 
 }
+
+// CreateAdminsTable initializes the admins table with required fields
+// Called automatically if table doesn't exist during admin creation
 func CreateAdminsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS admins (
@@ -121,7 +129,10 @@ func CreateAdminsTable(db *sql.DB) {
 		log.Println("Admins table ensured to exist.")
 	}
 }
-func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
+
+// EditAdmin updates an admin's name and contact information
+// Admin is identified by their email which cannot be changed
+func EditAdmin(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
@@ -152,7 +163,7 @@ func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	}
 
 	var admin models.Admin
-	if err := json.NewDecoder(r.Body).Decode(&admin); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&admin); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
@@ -161,13 +172,13 @@ func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
 		http.Error(w, "Email is required to identify the admin", http.StatusBadRequest)
 		return
 	}
-	
+
 	query := `
 			UPDATE admins
 			SET name = $1 , contact = $2
 			WHERE email = $3
 	`
-	_,err = db.Exec(query,
+	_, err = db.Exec(query,
 		admin.Name,
 		admin.Contact,
 		admin.Email,
@@ -179,6 +190,6 @@ func EditAdmin(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Admin details updated successfully"))	
+	w.Write([]byte("Admin details updated successfully"))
 
 }

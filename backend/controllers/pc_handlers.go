@@ -12,6 +12,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// AddPlacementCoordinator creates new coordinator with dual table entries
+// Links coordinator to both admins and students tables
 func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -43,7 +45,7 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB)
 	}
 
 	var coordinator models.PlacementCoordinator
-	if err := json.NewDecoder(r.Body).Decode(&coordinator); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&coordinator); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
@@ -134,6 +136,8 @@ func AddPlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB)
 
 }
 
+// CreatePlacementCoordinatorsTable sets up table with foreign key constraints
+// Links to both admins and students tables for data integrity
 func CreatePlacementCoordinatorsTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS placement_coordinators (
@@ -151,6 +155,8 @@ func CreatePlacementCoordinatorsTable(db *sql.DB) {
 	}
 }
 
+// GetAllPlacementCoordinators retrieves coordinator details with joins
+// Returns combined data from admins and placement_coordinators tables
 func GetAllPlacementCoordinators(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	if r.Method != http.MethodGet {
@@ -352,7 +358,7 @@ func EditPlacementCoordinator(w http.ResponseWriter, r *http.Request, db *sql.DB
 	}
 
 	var coordinator models.PlacementCoordinator
-	if err := json.NewDecoder(r.Body).Decode(&coordinator); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&coordinator); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}

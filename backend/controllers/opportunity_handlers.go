@@ -16,6 +16,8 @@ type Coordinator struct {
 	Name    string `json:"name"`
 	Contact string `json:"contact"`
 }
+// GenerateOpportunityID creates unique IDs for opportunities: OP{YY}{001}
+// YY represents last two digits of batch year
 func GenerateOpportunityID(batch string, serial int) string {
 	// Format serial number as a 3-digit string
 	serialStr := fmt.Sprintf("%03d", serial)

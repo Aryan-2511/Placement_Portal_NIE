@@ -11,6 +11,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
+// GenerateNotificationID creates unique IDs: NT{YY}{0001}
+// Uses batch year for year-specific tracking
 func GenerateNotificationID(batch string, serial int) string {
 	// Take last two digits of the batch year (e.g., "25" from "2025")
 	batchCode := batch[2:4] // Get "25" from "2025"
@@ -18,6 +20,8 @@ func GenerateNotificationID(batch string, serial int) string {
 	return fmt.Sprintf("NT%s%s", batchCode, serialStr)
 }
 
+// AddNotificationHandler creates in-app notifications with recipient tracking
+// Supports both batch-wide and targeted notifications
 func AddNotificationHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {

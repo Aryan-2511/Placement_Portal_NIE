@@ -7,6 +7,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// ProtectedHandler validates JWT claims and returns user details
+// Used for testing authentication and retrieving current user info
 func ProtectedHandler(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value(UserContextKey).(jwt.MapClaims)
 	if !ok {

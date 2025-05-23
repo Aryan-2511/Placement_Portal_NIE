@@ -12,7 +12,9 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+// ApplyHandler processes student applications for opportunities
+// Validates eligibility criteria and prevents duplicate applications
+func ApplyHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -238,7 +240,9 @@ func ApplyHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	})
 }
 
-func CreateApplicationsTable(db *sql.DB){
+// CreateApplicationsTable initializes applications table with foreign keys
+// Links students to opportunities with unique constraint
+func CreateApplicationsTable(db *sql.DB) {
 	query := `
 		CREATE TABLE IF NOT EXISTS applications (
     	id SERIAL PRIMARY KEY,
@@ -260,7 +264,9 @@ func CreateApplicationsTable(db *sql.DB){
 	}
 }
 
-func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sql.DB){
+// GetStudentApplicationsHandler retrieves all applications for a specific student
+// Includes job post and company details from opportunities table
+func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -356,6 +362,8 @@ func GetStudentApplicationsHandler(w http.ResponseWriter, r *http.Request,db *sq
 	json.NewEncoder(w).Encode(applications)
 }
 
+// GetApplicationsByBatch fetches all applications for students in a specific batch
+// Returns extended application info including company and job details
 func GetApplicationsByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodGet {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

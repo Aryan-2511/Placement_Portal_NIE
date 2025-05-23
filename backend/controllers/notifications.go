@@ -11,7 +11,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-// NotificationRequest defines the structure for notification requests
+// NotificationRequest defines structure for sending notifications to students
+// Supports batch, custom, and all-student targeting
 type NotificationRequest struct {
 	Title            string   `json:"title"`
 	Message          string   `json:"message"`
@@ -26,7 +27,8 @@ type NotificationRequest struct {
 //     return fmt.Sprintf("NOT%s%04d", year[2:], serial)
 // }
 
-// Add this function to get recipients
+// getRecipients retrieves email addresses based on target criteria
+// Handles BATCH, CUSTOM, and ALL notification types
 func getRecipients(db *sql.DB, targetType, targetValue string, customEmails []string) ([]string, error) {
 	var recipients []string
 
@@ -66,6 +68,8 @@ func getRecipients(db *sql.DB, targetType, targetValue string, customEmails []st
 	return recipients, nil
 }
 
+// SendUnifiedNotification handles notification creation and delivery
+// Supports both in-app and email notifications with transaction safety
 func SendUnifiedNotification(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// Add auth check
 	claims, err := utils.ValidateToken(r.Header.Get("Authorization"))

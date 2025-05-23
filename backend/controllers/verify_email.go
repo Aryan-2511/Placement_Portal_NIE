@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 )
-func VerifyEmailHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+// VerifyEmailHandler processes email verification tokens
+// Activates student account and clears verification token
+func VerifyEmailHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer func() {
         if r := recover(); r != nil {
             log.Printf("Recovered from panic: %v", r)

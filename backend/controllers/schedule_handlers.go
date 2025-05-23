@@ -11,12 +11,15 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/models"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
+
+// AddEvent creates new schedule entry with auto-generated ID: SCH{YY}{001}
+// Only accessible by admins and placement coordinators
 func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-    if r.Method != http.MethodPost {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-    authHeader := r.Header.Get("Authorization")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
@@ -35,25 +38,24 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
+	var event models.Schedule
+	if err = json.NewDecoder(r.Body).Decode(&event); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    var event models.Schedule
-    if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
-
-    // Generate schedule ID based on batch
-    var batchPart string
-    if event.Batch != "" {
-        batchPart = event.Batch[2:]
-    } else {
-        fmt.Print("Batch is empty")
-    }
+	// Generate schedule ID based on batch
+	var batchPart string
+	if event.Batch != "" {
+		batchPart = event.Batch[2:]
+	} else {
+		fmt.Print("Batch is empty")
+	}
 	tableName := "schedule"
 
 	exists, err := utils.CheckTableExists(db, tableName)
@@ -69,30 +71,32 @@ func AddEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		CreateScheduleTable(db)
 	}
 
+	queryCount := `SELECT COUNT(*) FROM schedule WHERE batch = $1`
+	var count int
+	err = db.QueryRow(queryCount, event.Batch).Scan(&count)
+	if err != nil {
+		http.Error(w, "Error generating schedule ID", http.StatusInternalServerError)
+		return
+	}
 
-    queryCount := `SELECT COUNT(*) FROM schedule WHERE batch = $1`
-    var count int
-    err = db.QueryRow(queryCount, event.Batch).Scan(&count)
-    if err != nil {
-        http.Error(w, "Error generating schedule ID", http.StatusInternalServerError)
-        return
-    }
+	scheduleID := fmt.Sprintf("SCH%s%03d", batchPart, count+1)
 
-    scheduleID := fmt.Sprintf("SCH%s%03d", batchPart, count+1)
-	
-    query := `
+	query := `
         INSERT INTO schedule (schedule_id, title, description, start_time, end_time, created_by, batch)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
     `
-    _, err = db.Exec(query, scheduleID, event.Title, event.Description, event.StartTime, event.EndTime, event.CreatedBy, event.Batch)
-    if err != nil {
-        http.Error(w, "Error adding event", http.StatusInternalServerError)
-        return
-    }
+	_, err = db.Exec(query, scheduleID, event.Title, event.Description, event.StartTime, event.EndTime, event.CreatedBy, event.Batch)
+	if err != nil {
+		http.Error(w, "Error adding event", http.StatusInternalServerError)
+		return
+	}
 
-    w.WriteHeader(http.StatusCreated)
-    w.Write([]byte("Event added successfully"))
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Event added successfully"))
 }
+
+// CreateScheduleTable initializes schedule table with timestamp fields
+// Stores event details with batch-specific targeting
 func CreateScheduleTable(db *sql.DB) {
 	query := `
 	CREATE TABLE IF NOT EXISTS schedule (
@@ -114,12 +118,15 @@ func CreateScheduleTable(db *sql.DB) {
 		log.Println("Schedule table ensured to exist.")
 	}
 }
+
+// DeleteEvent removes schedule entry by ID with authorization check
+// Verifies event existence before deletion
 func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-    if r.Method != http.MethodDelete {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-    authHeader := r.Header.Get("Authorization")
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
@@ -138,40 +145,40 @@ func DeleteEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-    // Extract schedule ID from the request
-    scheduleID := r.URL.Query().Get("schedule_id")
-    if scheduleID == "" {
-        http.Error(w, "Schedule ID is required", http.StatusBadRequest)
-        return
-    }
+	// Extract schedule ID from the request
+	scheduleID := r.URL.Query().Get("schedule_id")
+	if scheduleID == "" {
+		http.Error(w, "Schedule ID is required", http.StatusBadRequest)
+		return
+	}
 
-    query := `DELETE FROM schedule WHERE schedule_id = $1`
-    result, err := db.Exec(query, scheduleID)
-    if err != nil {
-        http.Error(w, "Error deleting event", http.StatusInternalServerError)
-        log.Printf("Error deleting event: %v", err)
-        return
-    }
+	query := `DELETE FROM schedule WHERE schedule_id = $1`
+	result, err := db.Exec(query, scheduleID)
+	if err != nil {
+		http.Error(w, "Error deleting event", http.StatusInternalServerError)
+		log.Printf("Error deleting event: %v", err)
+		return
+	}
 
-    rowsAffected, _ := result.RowsAffected()
-    if rowsAffected == 0 {
-        http.Error(w, "Event not found", http.StatusNotFound)
-        return
-    }
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Event not found", http.StatusNotFound)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Event deleted successfully"))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Event deleted successfully"))
 }
 func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-    if r.Method != http.MethodPut {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-    authHeader := r.Header.Get("Authorization")
+	if r.Method != http.MethodPut {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
@@ -190,64 +197,64 @@ func EditEvent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-    // Extract schedule ID from the request
-    scheduleID := r.URL.Query().Get("schedule_id")
-    if scheduleID == "" {
-        http.Error(w, "Schedule ID is required", http.StatusBadRequest)
-        return
-    }
+	// Extract schedule ID from the request
+	scheduleID := r.URL.Query().Get("schedule_id")
+	if scheduleID == "" {
+		http.Error(w, "Schedule ID is required", http.StatusBadRequest)
+		return
+	}
 
-    // Decode the updated event details
-    var updatedEvent models.Schedule
-    if err := json.NewDecoder(r.Body).Decode(&updatedEvent); err != nil {
-        http.Error(w, "Invalid input", http.StatusBadRequest)
-        return
-    }
+	// Decode the updated event details
+	var updatedEvent models.Schedule
+	if err = json.NewDecoder(r.Body).Decode(&updatedEvent); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
 
-    // Update query
-    query := `
+	// Update query
+	query := `
         UPDATE schedule
         SET title = $1, description = $2, start_time = $3, end_time = $4,
             created_by = $5, batch = $6
         WHERE schedule_id = $7
     `
-    result, err := db.Exec(query,
-        updatedEvent.Title,
-        updatedEvent.Description,
-        updatedEvent.StartTime,
-        updatedEvent.EndTime,
-        updatedEvent.CreatedBy,
-        updatedEvent.Batch,
-        scheduleID,
-    )
+	result, err := db.Exec(query,
+		updatedEvent.Title,
+		updatedEvent.Description,
+		updatedEvent.StartTime,
+		updatedEvent.EndTime,
+		updatedEvent.CreatedBy,
+		updatedEvent.Batch,
+		scheduleID,
+	)
 
-    if err != nil {
-        http.Error(w, "Error updating event", http.StatusInternalServerError)
-        log.Printf("Error updating event: %v", err)
-        return
-    }
+	if err != nil {
+		http.Error(w, "Error updating event", http.StatusInternalServerError)
+		log.Printf("Error updating event: %v", err)
+		return
+	}
 
-    rowsAffected, _ := result.RowsAffected()
-    if rowsAffected == 0 {
-        http.Error(w, "Event not found", http.StatusNotFound)
-        return
-    }
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		http.Error(w, "Event not found", http.StatusNotFound)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Event updated successfully"))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Event updated successfully"))
 }
 func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-    if r.Method != http.MethodGet {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-    // Extract the optional "batch" filter from query parameters
-    batch := r.URL.Query().Get("batch")
-    authHeader := r.Header.Get("Authorization")
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	// Extract the optional "batch" filter from query parameters
+	batch := r.URL.Query().Get("batch")
+	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
@@ -266,60 +273,60 @@ func GetAllEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!="STUDENT"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"] != "STUDENT" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
 
-    var (
-        query string
-        rows  *sql.Rows
-        err1   error
-    )
+	var (
+		query string
+		rows  *sql.Rows
+		err1  error
+	)
 
-    // Check if the batch filter is provided
-    if batch != "" {
-        query = "SELECT schedule_id, title, description, start_time, end_time, created_by, batch FROM schedule WHERE batch = $1 ORDER BY start_time"
-        rows, err1 = db.Query(query, batch)
-    } else {
-        query = "SELECT schedule_id, title, description, start_time, end_time, created_by, batch FROM schedule ORDER BY start_time"
-        rows, err1 = db.Query(query)
-    }
+	// Check if the batch filter is provided
+	if batch != "" {
+		query = "SELECT schedule_id, title, description, start_time, end_time, created_by, batch FROM schedule WHERE batch = $1 ORDER BY start_time"
+		rows, err1 = db.Query(query, batch)
+	} else {
+		query = "SELECT schedule_id, title, description, start_time, end_time, created_by, batch FROM schedule ORDER BY start_time"
+		rows, err1 = db.Query(query)
+	}
 
-    if err1 != nil {
-        http.Error(w, "Error fetching events", http.StatusInternalServerError)
-        log.Printf("Error executing query: %v", err1)
-        return
-    }
-    defer rows.Close()
+	if err1 != nil {
+		http.Error(w, "Error fetching events", http.StatusInternalServerError)
+		log.Printf("Error executing query: %v", err1)
+		return
+	}
+	defer rows.Close()
 
-    var events []models.Schedule
-    for rows.Next() {
-        var event models.Schedule
-        if err1 := rows.Scan(&event.ScheduleID, &event.Title, &event.Description, &event.StartTime, &event.EndTime, &event.CreatedBy, &event.Batch); err1 != nil {
-            http.Error(w, "Error processing events", http.StatusInternalServerError)
-            log.Printf("Error scanning row: %v", err1)
-            return
-        }
-        events = append(events, event)
-    }
+	var events []models.Schedule
+	for rows.Next() {
+		var event models.Schedule
+		if err1 := rows.Scan(&event.ScheduleID, &event.Title, &event.Description, &event.StartTime, &event.EndTime, &event.CreatedBy, &event.Batch); err1 != nil {
+			http.Error(w, "Error processing events", http.StatusInternalServerError)
+			log.Printf("Error scanning row: %v", err1)
+			return
+		}
+		events = append(events, event)
+	}
 
-    if rows.Err() != nil {
-        http.Error(w, "Error iterating through rows", http.StatusInternalServerError)
-        log.Printf("Error iterating rows: %v", rows.Err())
-        return
-    }
+	if rows.Err() != nil {
+		http.Error(w, "Error iterating through rows", http.StatusInternalServerError)
+		log.Printf("Error iterating rows: %v", rows.Err())
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(events)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(events)
 }
 
 func GetStudentEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-    if r.Method != http.MethodGet {
-        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-        return
-    }
-    authHeader := r.Header.Get("Authorization")
+	if r.Method != http.MethodGet {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
 		return
@@ -338,34 +345,34 @@ func GetStudentEvents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 		return
 	}
-	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"]!="STUDENT"{
+	if claims["role"] != "ADMIN" && claims["role"] != "PLACEMENT_COORDINATOR" && claims["role"] != "STUDENT" {
 		http.Error(w, "Unauthorized access", http.StatusForbidden)
 		return
 	}
-    batch := r.URL.Query().Get("batch")
-    if batch == "" {
-        http.Error(w, "Batch is required", http.StatusBadRequest)
-        return
-    }
+	batch := r.URL.Query().Get("batch")
+	if batch == "" {
+		http.Error(w, "Batch is required", http.StatusBadRequest)
+		return
+	}
 
-    query := "SELECT schedule_id, title, description, start_time, end_time FROM schedule WHERE batch = $1 ORDER BY start_time"
-    rows, err := db.Query(query, batch)
-    if err != nil {
-        http.Error(w, "Error fetching events", http.StatusInternalServerError)
-        return
-    }
-    defer rows.Close()
+	query := "SELECT schedule_id, title, description, start_time, end_time FROM schedule WHERE batch = $1 ORDER BY start_time"
+	rows, err := db.Query(query, batch)
+	if err != nil {
+		http.Error(w, "Error fetching events", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
 
-    var events []models.Schedule
-    for rows.Next() {
-        var event models.Schedule
-        if err := rows.Scan(&event.ScheduleID, &event.Title, &event.Description, &event.StartTime, &event.EndTime); err != nil {
-            http.Error(w, "Error processing events", http.StatusInternalServerError)
-            return
-        }
-        events = append(events, event)
-    }
+	var events []models.Schedule
+	for rows.Next() {
+		var event models.Schedule
+		if err := rows.Scan(&event.ScheduleID, &event.Title, &event.Description, &event.StartTime, &event.EndTime); err != nil {
+			http.Error(w, "Error processing events", http.StatusInternalServerError)
+			return
+		}
+		events = append(events, event)
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(events)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(events)
 }

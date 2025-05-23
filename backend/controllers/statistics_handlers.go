@@ -13,6 +13,8 @@ import (
 )
 
 // Add authentication checks and CORS handling
+// GetTotalStudentsInBatch counts total students in specific batch
+// Used for placement statistics and batch management
 func GetTotalStudentsInBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// Add authentication check
 	authHeader := r.Header.Get("Authorization")
@@ -62,6 +64,8 @@ func GetTotalStudentsInBatch(w http.ResponseWriter, r *http.Request, db *sql.DB)
 }
 
 // Add similar authentication blocks to other functions
+// GetTotalPlacedInBatch counts placed students in specific batch
+// Excludes duplicate placements for accurate statistics
 func GetTotalPlacedInBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	// Add same authentication block as above
 	authHeader := r.Header.Get("Authorization")

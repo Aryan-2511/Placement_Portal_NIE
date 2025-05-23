@@ -11,6 +11,7 @@ import (
 )
 
 // Add this struct at the top with other imports
+// FilteredStudent represents essential student information for batch-wise filtering
 type FilteredStudent struct {
 	Name           string  `json:"name"`
 	USN            string  `json:"usn"`
@@ -22,6 +23,8 @@ type FilteredStudent struct {
 	Current_CGPA   float64 `json:"current_cgpa"`
 }
 
+// FilterByBatch retrieves students from a specific batch
+// Returns filtered student details including academic performance
 func FilterByBatch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

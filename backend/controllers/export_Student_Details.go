@@ -1,18 +1,20 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
-	"database/sql"
-	"Github.com/Aryan-2511/Placement_NIE/utils"
 
+	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+// ExportCustomStudentDetailsToCSV generates CSV with selected student fields
+// Allows flexible field selection and handles special data types like DECIMAL
+func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(w, "Authorization token is required", http.StatusUnauthorized)
@@ -42,7 +44,7 @@ func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *
 	}
 
 	// Decode request body
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
@@ -59,28 +61,28 @@ func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *
 
 	// List all allowed fields from the `students` table
 	allowedFields := map[string]string{
-		"usn":                  "students.usn",
-		"name":                 "students.name",
-		"dob":                  "students.dob",
-		"college_email":        "students.college_email",
-		"personal_email":       "students.personal_email",
-		"branch":               "students.branch",
-		"batch":                "students.batch",
-		"address":              "students.address",
-		"contact":              "students.contact",
-		"gender":               "students.gender",
-		"category":             "students.category",
-		"aadhar":               "students.aadhar",
-		"pan":                  "students.pan",
-		"class_10_percentage":  "students.class_10_percentage",
-		"class_10_year":        "students.class_10_year",
-		"class_10_board":       "students.class_10_board",
-		"class_12_percentage":  "students.class_12_percentage",
-		"class_12_year":        "students.class_12_year",
-		"class_12_board":       "students.class_12_board",
-		"current_cgpa":         "students.current_cgpa",
-		"backlogs":             "students.backlogs",
-		"resume_link":			"students.resume_link",
+		"usn":                 "students.usn",
+		"name":                "students.name",
+		"dob":                 "students.dob",
+		"college_email":       "students.college_email",
+		"personal_email":      "students.personal_email",
+		"branch":              "students.branch",
+		"batch":               "students.batch",
+		"address":             "students.address",
+		"contact":             "students.contact",
+		"gender":              "students.gender",
+		"category":            "students.category",
+		"aadhar":              "students.aadhar",
+		"pan":                 "students.pan",
+		"class_10_percentage": "students.class_10_percentage",
+		"class_10_year":       "students.class_10_year",
+		"class_10_board":      "students.class_10_board",
+		"class_12_percentage": "students.class_12_percentage",
+		"class_12_year":       "students.class_12_year",
+		"class_12_board":      "students.class_12_board",
+		"current_cgpa":        "students.current_cgpa",
+		"backlogs":            "students.backlogs",
+		"resume_link":         "students.resume_link",
 	}
 
 	// Validate selected fields and build SQL query dynamically
@@ -144,18 +146,18 @@ func ExportCustomStudentDetailsToCSV(w http.ResponseWriter, r *http.Request,db *
 		}
 
 		record := make([]string, len(columnNames))
-	for i, val := range values {
-    	if val != nil {
-        	// Handle DECIMAL(4,2) fields
-        	if decimalValue, ok := val.([]byte); ok {
-            	record[i] = string(decimalValue) // Convert byte array to string
-        	} else {
-            	record[i] = fmt.Sprintf("%v", val)
-        	}
-    	} else {
-        	record[i] = ""
-    	}
-	}
+		for i, val := range values {
+			if val != nil {
+				// Handle DECIMAL(4,2) fields
+				if decimalValue, ok := val.([]byte); ok {
+					record[i] = string(decimalValue) // Convert byte array to string
+				} else {
+					record[i] = fmt.Sprintf("%v", val)
+				}
+			} else {
+				record[i] = ""
+			}
+		}
 
 		if err := writer.Write(record); err != nil {
 			log.Printf("Error writing CSV record: %v", err)

@@ -10,7 +10,9 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func FilterByBranch(w http.ResponseWriter,r *http.Request,db *sql.DB){
+// FilterByBranch retrieves students from specific branch and batch combination
+// Returns filtered student details for placement coordinators and admins
+func FilterByBranch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return

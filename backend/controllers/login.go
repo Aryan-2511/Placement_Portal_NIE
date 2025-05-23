@@ -11,6 +11,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 	"golang.org/x/crypto/bcrypt"
 )
+// CheckPasswordHash verifies if provided password matches stored hash
+// Uses bcrypt for secure password comparison
 func CheckPasswordHash(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
     if err != nil {
@@ -21,6 +23,8 @@ func CheckPasswordHash(password, hash string) error {
 	return err
 }
 
+// LoginHandler authenticates users based on role (Admin/PC/Student)
+// Generates JWT token upon successful authentication and returns user details
 func LoginHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)

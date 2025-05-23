@@ -9,6 +9,8 @@ import (
 
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
+// GetRecentOpportunities counts opportunities from last 30 days
+// Used for student dashboard activity metrics
 func GetRecentOpportunities(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodGet {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -71,6 +73,8 @@ func GetRecentOpportunities(w http.ResponseWriter, r *http.Request, db *sql.DB) 
     json.NewEncoder(w).Encode(response)
 }
 
+// GetActiveOpportunitiesCount retrieves count of current opportunities
+// Filters by batch and active status
 func GetActiveOpportunitiesCount(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodGet {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -120,6 +124,8 @@ func GetActiveOpportunitiesCount(w http.ResponseWriter, r *http.Request, db *sql
     json.NewEncoder(w).Encode(response)
 }
 
+// GetPlacedStudentsCount tracks placement progress in batch
+// Used for student dashboard statistics
 func GetPlacedStudentsCount(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     if r.Method != http.MethodGet {
         http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

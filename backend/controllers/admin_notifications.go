@@ -10,6 +10,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
+// GetBatchNotificationsHandler retrieves all notifications for a specific batch
+// Includes read/unread counts and recipient statistics
 func GetBatchNotificationsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -101,6 +103,8 @@ func GetBatchNotificationsHandler(w http.ResponseWriter, r *http.Request, db *sq
 	json.NewEncoder(w).Encode(notifications)
 }
 
+// DeleteNotificationHandler removes a notification and its recipients via cascade
+// Only accessible by admins and placement coordinators
 func DeleteNotificationHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

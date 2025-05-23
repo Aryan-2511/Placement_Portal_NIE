@@ -6,7 +6,9 @@ import(
 	"net/http"
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
-func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+// ForgotPasswordHandler generates reset token and sends password reset email
+// Updates student record with reset token and sends URL via email
+func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	var request struct {
 		Email string `json:"email"`
 	}

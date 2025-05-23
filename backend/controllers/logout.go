@@ -11,15 +11,17 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-// TokenBlacklist is a simple in-memory store for invalidated tokens.
+// TokenBlacklist stores invalidated tokens with their expiration times
 var TokenBlacklist = make(map[string]time.Time)
 
-// InvalidateToken adds the token to the blacklist with an expiration time.
+// InvalidateToken adds token to blacklist with expiration timestamp
+// Used to prevent reuse of logged-out tokens
 func InvalidateToken(token string, expiration time.Time) {
 	TokenBlacklist[token] = expiration
 }
 
-// IsTokenInvalid checks if the token is in the blacklist and invalid.
+// IsTokenInvalid checks if token is blacklisted and not expired
+// Automatically removes expired tokens from blacklist
 func IsTokenInvalid(token string) bool {
 	expiration, exists := TokenBlacklist[token]
 	if !exists {
@@ -33,8 +35,9 @@ func IsTokenInvalid(token string) bool {
 	return true
 }
 
-// LogoutHandler handles user logout and token invalidation
-func LogoutHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+// LogoutHandler invalidates current user token
+// Adds token to blacklist until its original expiration time
+func LogoutHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return

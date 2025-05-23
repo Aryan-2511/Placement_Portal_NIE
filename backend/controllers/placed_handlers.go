@@ -13,6 +13,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
+// GeneratePlacementID creates unique IDs: PL{YY}{0001}
+// Maintains sequential numbering within batch
 func GeneratePlacementID(db *sql.DB, batch string) (string, error) {
 	// Get the current highest serial number for this batch
 	var maxID string
@@ -74,7 +76,7 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		USN           string `json:"usn"`
 		OpportunityID string `json:"opportunity_id"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
@@ -203,6 +205,8 @@ func AddPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	w.Write([]byte("Student marked as placed successfully"))
 }
 
+// CreatePlacedStudentsTable initializes table with foreign key constraints
+// Tracks placement details with company and package information
 func CreatePlacedStudentsTable(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS placed_students (
@@ -330,7 +334,7 @@ func EditPlacedStudent(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 
 	var placed_student models.PlacedStudent
-	if err := json.NewDecoder(r.Body).Decode(&placed_student); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&placed_student); err != nil {
 		log.Printf("Error decoding request body: %v", err)
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return

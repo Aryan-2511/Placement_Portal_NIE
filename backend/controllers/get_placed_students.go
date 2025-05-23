@@ -11,6 +11,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
+// GetPlacedStudents retrieves all placed students with their placement details
+// Includes company, package, and placement type information
 func GetPlacedStudents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	authHeader := r.Header.Get("Authorization")
@@ -59,6 +61,8 @@ func GetPlacedStudents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	json.NewEncoder(w).Encode(placedStudents)
 }
 
+// GetUnplacedStudents retrieves students who haven't secured placements
+// Filters students where isPlaced flag is 'NO'
 func GetUnplacedStudents(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	authHeader := r.Header.Get("Authorization")

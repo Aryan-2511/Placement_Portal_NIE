@@ -11,6 +11,8 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
+// GetStudentDetailsHandler retrieves comprehensive student profile
+// Accessible by student and admin roles
 func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
@@ -83,6 +85,8 @@ func GetStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB
 	}
 }
 
+// EditStudentDetailsHandler updates modifiable student information
+// Preserves critical fields like USN and email
 func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -125,7 +129,7 @@ func EditStudentDetailsHandler(w http.ResponseWriter, r *http.Request, db *sql.D
 
 	// Parse the request body to get updated details
 	var updatedStudent models.User
-	if err := json.NewDecoder(r.Body).Decode(&updatedStudent); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&updatedStudent); err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}

@@ -8,6 +8,8 @@ import(
 
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
+// SendNotificationHandler manages bulk email notifications
+// Supports batch, opportunity, and custom recipient targeting
 func SendNotificationHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {

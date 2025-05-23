@@ -11,7 +11,9 @@ import (
 	"Github.com/Aryan-2511/Placement_NIE/utils"
 )
 
-func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request,db *sql.DB){
+// FilterPlacedByBranch retrieves placed students from specific branch
+// Returns placement details including company and package
+func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -71,7 +73,9 @@ func FilterPlacedByBranch(w http.ResponseWriter, r *http.Request,db *sql.DB){
 
 
 }
-func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request,db *sql.DB){
+// FilterPlacedByCompany retrieves students placed in specific company
+// Groups placements by company name
+func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method!=http.MethodGet{
 		http.Error(w,"Invalid request method",http.StatusMethodNotAllowed)
 		return
@@ -129,7 +133,9 @@ func FilterPlacedByCompany(w http.ResponseWriter, r *http.Request,db *sql.DB){
 	json.NewEncoder(w).Encode(students)
 
 }
-func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request,db *sql.DB){
+// FilterPlacedByCTC retrieves placements within CTC range
+// Supports ascending/descending package sorting
+func FilterPlacedByCTC(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if r.Method != http.MethodGet{
 		http.Error(w, "Invalid request method",http.StatusMethodNotAllowed)
 		return

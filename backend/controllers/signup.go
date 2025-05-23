@@ -15,7 +15,9 @@ import (
 )
 
 
-func SignupHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
+// SignupHandler processes student registration with email verification
+// Creates student record with encrypted password and verification token
+func SignupHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -92,6 +94,8 @@ func SignupHandler(w http.ResponseWriter, r *http.Request,db *sql.DB) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "User  registered successfully"})
 }
 
+// CreateStudentsTable initializes comprehensive student profile table
+// Includes academic, personal, and verification fields
 func CreateStudentsTable(db *sql.DB) {
 	query := `
 		CREATE TABLE IF NOT EXISTS students (
